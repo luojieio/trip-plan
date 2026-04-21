@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>旅行规划 - 中国城市探索</title>
+    <style>
+        :root {
+            --glass-bg: rgba(20, 20, 30, 0.85);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            --accent-gold: #d4af37;
+            --accent-purple: #9b59b6;
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.7);
+            --gradient-1: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            --gradient-gold: linear-gradient(135deg, #d4af37, #f4e4bc);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--gradient-1);
+            min-height: 100vh;
+            color: var(--text-primary);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* 登录遮罩层 */
+        .login-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(10, 10, 20, 0.95);
+            backdrop-filter: blur(10px);
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+        .login-overlay.hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+        .login-box {
+            background: var(--glass-bg);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
+            padding: 48px 40px;
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+            animation: loginSlideIn 0.5s ease;
+        }
+        @keyframes loginSlideIn {
+            from { transform: translateY(-30px) scale(0.95); opacity: 0; }
+            to { transform: translateY(0) scale(1); opacity: 1; }
+        }
+        .login-logo {
+            font-size: 3.5rem;
+            margin-bottom: 16px;
+        }
+        .login-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            background: var(--gradient-gold);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+        }
+        .login-subtitle {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 32px;
+        }
+        .login-input {
+            width: 100%;
+            padding: 14px 18px;
+            margin-bottom: 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.3s, background 0.3s;
+        }
+        .login-input::placeholder {
+            color: var(--text-secondary);
+        }
+        .login-input:focus {
+            border-color: var(--accent-gold);
+            background: rgba(255, 255, 255, 0.08);
+        }
+        .login-btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--gradient-gold);
+            border: none;
+            border-radius: 12px;
+            color: #1a1a2e;
+            font-size: 1.05rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            margin-top: 8px;
+        }
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(212, 175, 55, 0.4);
+        }
+        .login-btn:active {
+            transform: translateY(0);
+        }
+        .login-error {
+            color: #ff6b6b;
+            font-size: 0.85rem;
+            margin-top: 16px;
+            min-height: 20px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .login-error.show {
+            opacity: 1;
+        }
+        .login-hint {
+            color: var(--text-secondary);
+            font-size: 0.75rem;
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid var(--glass-border);
+        }
+
+        /* 登录框响应式 */
+        @media (max-width: 480px) {
+            .login-box {
+                margin: 16px;
+                padding: 36px 24px;
+            }
+            .login-logo { font-size: 2.8rem; }
+            .login-title { font-size: 1.4rem; }
+        }
+
+        /* 星空粒子背景 */
+        .stars {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 0;
+        }
+        .star {
+            position: absolute; border-radius: 50%; background: white;
+            animation: twinkle var(--dur) ease-in-out infinite;
+        }
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.2; }
+            50% { opacity: 0.8; }
+        }
+
+        .header {
+            text-align: center;
+            padding: 60px 20px 30px;
+            position: relative;
+            z-index: 1;
+        }
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            background: var(--gradient-gold);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 12px;
+        }
+        .header .subtitle {
+            font-size: 1.15rem;
+            color: var(--text-secondary);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px 24px 60px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* 地图区域 */
+        .map-section {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            box-shadow: var(--glass-shadow);
+            padding: 32px;
+            margin-bottom: 40px;
+            position: relative;
+        }
+        .map-section h2 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .map-section h2::before {
+            content: '';
+            width: 4px; height: 24px;
+            background: var(--gradient-gold);
+            border-radius: 2px;
+        }
+
+        .map-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        .map-wrapper svg {
+            width: 100%;
+            height: auto;
+        }
+        .map-wrapper svg .province {
+            fill: rgba(255, 255, 255, 0.06);
+            stroke: rgba(255, 255, 255, 0.15);
+            stroke-width: 0.8;
+            transition: fill 0.3s, stroke 0.3s, filter 0.3s;
+            cursor: default;
+        }
+        .map-wrapper svg .province.has-plan {
+            fill: rgba(212, 175, 55, 0.15);
+            stroke: rgba(212, 175, 55, 0.5);
+            cursor: pointer;
+            filter: drop-shadow(0 0 6px rgba(212, 175, 55, 0.2));
+        }
+        .map-wrapper svg .province.has-plan:hover {
+            fill: rgba(212, 175, 55, 0.35);
+            stroke: rgba(212, 175, 55, 0.8);
+            filter: drop-shadow(0 0 16px rgba(212, 175, 55, 0.5));
+        }
+
+        /* 城市标记点 */
+        .city-marker {
+            position: absolute;
+            transform: translate(-50%, -50%);
+            cursor: pointer;
+            z-index: 10;
+            text-decoration: none;
+        }
+        .city-dot {
+            width: 16px; height: 16px;
+            background: var(--accent-gold);
+            border-radius: 50%;
+            margin: 0 auto 6px;
+            box-shadow: 0 0 12px rgba(212, 175, 55, 0.6), 0 0 24px rgba(212, 175, 55, 0.3);
+            animation: markerPulse 2s ease-in-out infinite;
+            position: relative;
+        }
+        .city-dot::after {
+            content: '';
+            position: absolute;
+            top: -6px; left: -6px;
+            width: 28px; height: 28px;
+            border: 2px solid rgba(212, 175, 55, 0.4);
+            border-radius: 50%;
+            animation: markerRipple 2s ease-out infinite;
+        }
+        @keyframes markerPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.15); }
+        }
+        @keyframes markerRipple {
+            0% { transform: scale(1); opacity: 1; }
+            100% { transform: scale(2.2); opacity: 0; }
+        }
+        .city-label {
+            color: var(--accent-gold);
+            font-size: 0.85rem;
+            font-weight: 600;
+            white-space: nowrap;
+            text-shadow: 0 1px 8px rgba(0,0,0,0.8);
+            text-align: center;
+        }
+        .city-marker:hover .city-dot {
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.8), 0 0 40px rgba(212, 175, 55, 0.4);
+        }
+        .city-marker:hover .city-label {
+            color: #f4e4bc;
+        }
+
+        /* 城市卡片 */
+        .cities-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 24px;
+        }
+        .city-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            box-shadow: var(--glass-shadow);
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+        .city-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 16px 48px rgba(212, 175, 55, 0.15);
+            border-color: rgba(212, 175, 55, 0.3);
+        }
+        .city-card-banner {
+            height: 200px;
+            position: relative;
+            overflow: hidden;
+        }
+        .city-card-banner .slide-img {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            object-fit: cover;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+            will-change: opacity;
+        }
+        .city-card-banner .slide-img.active {
+            opacity: 1;
+        }
+        .city-card-banner::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 80px;
+            background: linear-gradient(to top, rgba(20, 20, 30, 0.95), transparent);
+        }
+        .city-card-banner .city-name-overlay {
+            position: absolute;
+            bottom: 16px; left: 20px;
+            z-index: 1;
+            font-size: 1.6rem;
+            font-weight: 700;
+            background: var(--gradient-gold);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .city-card-body {
+            padding: 20px;
+        }
+        .city-card-body .city-desc {
+            color: var(--text-secondary);
+            font-size: 0.92rem;
+            margin-bottom: 14px;
+            line-height: 1.7;
+        }
+        .city-meta {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .city-tag {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.78rem;
+            font-weight: 500;
+        }
+        .tag-date {
+            background: rgba(212, 175, 55, 0.15);
+            border: 1px solid rgba(212, 175, 55, 0.3);
+            color: var(--accent-gold);
+        }
+        .tag-days {
+            background: rgba(76, 175, 80, 0.15);
+            border: 1px solid rgba(76, 175, 80, 0.3);
+            color: #4CAF50;
+        }
+        .tag-spots {
+            background: rgba(155, 89, 182, 0.15);
+            border: 1px solid rgba(155, 89, 182, 0.3);
+            color: #bb86fc;
+        }
+        .enter-arrow {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 16px;
+            color: var(--accent-gold);
+            font-size: 0.88rem;
+            font-weight: 500;
+            transition: gap 0.3s;
+        }
+        .city-card:hover .enter-arrow {
+            gap: 12px;
+        }
+
+        /* 页脚 */
+        .footer {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* 提示信息 */
+        .map-hint {
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin-top: 16px;
+        }
+
+        /* 页面跳转展开特效 */
+        .page-transition-overlay {
+            position: fixed;
+            z-index: 99999;
+            border-radius: 50%;
+            pointer-events: none;
+            background: rgba(15, 52, 96, 0.97);
+            transform: scale(0);
+            will-change: transform;
+        }
+        .page-transition-overlay.expanding {
+            animation: expandCircle 0.6s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+        }
+        @keyframes expandCircle {
+            0% { transform: scale(0); }
+            100% { transform: scale(1); }
+        }
+        .page-transition-overlay .transition-city-name {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%) scale(0.3);
+            font-size: 3rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fff, #f4e4bc);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            white-space: nowrap;
+            opacity: 0;
+            will-change: transform, opacity;
+            animation: showCityName 0.4s 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
+        @keyframes showCityName {
+            0% { transform: translate(-50%, -50%) scale(0.3); opacity: 0; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }
+        /* 点击波纹 */
+        .click-ripple {
+            position: fixed;
+            z-index: 99998;
+            border-radius: 50%;
+            width: 200px; height: 200px;
+            border: 2px solid rgba(212, 175, 55, 0.8);
+            pointer-events: none;
+            transform: translate(-50%, -50%) scale(0);
+            will-change: transform, opacity;
+            animation: rippleExpand 0.5s ease-out forwards;
+        }
+        @keyframes rippleExpand {
+            0% { transform: translate(-50%, -50%) scale(0); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
+        }
+
+        /* 浮动按钮组 */
+        .float-buttons {
+            position: fixed;
+            right: 24px;
+            bottom: 32px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            z-index: 9000;
+        }
+        .float-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+        .float-btn-top {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+            opacity: 0;
+            transform: translateY(20px);
+            pointer-events: none;
+        }
+        .float-btn-top.visible {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+        .float-btn-top:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+        .float-btn-theme {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            color: var(--text-primary);
+        }
+        .float-btn-theme:hover {
+            background: rgba(255, 255, 255, 0.15);
+            transform: translateY(-2px);
+        }
+
+        /* 白天主题 */
+        body.light-theme {
+            --bg-primary: #f5f7fa;
+            --bg-secondary: #ffffff;
+            --glass-bg: rgba(255, 255, 255, 0.8);
+            --glass-border: rgba(0, 0, 0, 0.1);
+            --text-primary: #1a1a2e;
+            --text-secondary: #4a4a6a;
+            background: linear-gradient(135deg, #e8f4f8 0%, #f5f7fa 50%, #fef9f3 100%);
+        }
+        body.light-theme .stars { opacity: 0; }
+        body.light-theme .header h1 {
+            background: linear-gradient(135deg, #d4af37, #f4d03f);
+            -webkit-background-clip: text;
+        }
+        body.light-theme .province {
+            fill: rgba(100, 120, 150, 0.3);
+            stroke: rgba(100, 120, 150, 0.5);
+        }
+        body.light-theme .province:hover {
+            fill: rgba(100, 120, 150, 0.5);
+        }
+        body.light-theme .province.has-plan {
+            fill: rgba(212, 175, 55, 0.4);
+            stroke: #d4af37;
+        }
+        body.light-theme .city-card {
+            background: var(--glass-bg);
+            border-color: var(--glass-border);
+        }
+        body.light-theme .map-section {
+            background: var(--glass-bg);
+            border-color: var(--glass-border);
+        }
+        body.light-theme .footer {
+            background: rgba(255, 255, 255, 0.5);
+            color: var(--text-secondary);
+        }
+
+        /* 平板端适配 */
+        @media (max-width: 768px) {
+            .header h1 { font-size: 2rem; }
+            .header .subtitle { font-size: 0.9rem; }
+            .container { padding: 0 16px 40px; }
+            .map-section { padding: 20px; }
+            .map-section h2 { font-size: 1.3rem; }
+            .cities-grid { grid-template-columns: 1fr; gap: 20px; }
+            .city-card-banner { height: 180px; }
+            .city-card-info { padding: 16px; }
+            .city-card-name { font-size: 1.3rem; }
+            .city-marker { transform: scale(0.85); }
+            .city-label { font-size: 0.7rem; padding: 2px 6px; }
+        }
+
+        /* 手机端适配 */
+        @media (max-width: 480px) {
+            .header { padding: 40px 16px 30px; }
+            .header h1 { font-size: 1.6rem; }
+            .header .subtitle { font-size: 0.85rem; }
+            .container { padding: 0 12px 30px; }
+            .map-section { padding: 16px; border-radius: 16px; }
+            .map-section h2 { font-size: 1.1rem; margin-bottom: 16px; }
+            .map-wrapper { min-height: 280px; }
+            .cities-grid { gap: 16px; }
+            .city-card { border-radius: 16px; }
+            .city-card-banner { height: 160px; }
+            .city-card-info { padding: 14px; }
+            .city-card-name { font-size: 1.2rem; }
+            .city-card-desc { font-size: 0.8rem; }
+            .city-card-tags { gap: 6px; }
+            .city-card-tag { font-size: 0.7rem; padding: 3px 8px; }
+            .city-marker { transform: scale(0.75); }
+            .city-dot { width: 10px; height: 10px; }
+            .city-label { font-size: 0.65rem; padding: 2px 5px; }
+            .transition-city-name { font-size: 1.8rem; }
+        }
+
+        /* 超小屏幕适配 */
+        @media (max-width: 360px) {
+            .header h1 { font-size: 1.4rem; }
+            .map-section { padding: 12px; }
+            .map-wrapper { min-height: 240px; }
+            .city-card-banner { height: 140px; }
+            .city-card-name { font-size: 1.1rem; }
+        }
+    </style>
+</head>
+<body>
+    <!-- 登录弹窗 -->
+    <div class="login-overlay" id="loginOverlay">
+        <div class="login-box">
+            <div class="login-logo">🌏</div>
+            <h2 class="login-title">旅行规划助手</h2>
+            <p class="login-subtitle">请输入账号密码访问</p>
+            <input type="text" class="login-input" id="loginUsername" placeholder="账号" autocomplete="off">
+            <input type="password" class="login-input" id="loginPassword" placeholder="密码">
+            <button class="login-btn" onclick="handleLogin()">登 录</button>
+            <div class="login-error" id="loginError">账号或密码错误</div>
+            <p class="login-hint">提示：请联系管理员获取账号</p>
+        </div>
+    </div>
+
+    <!-- 星空背景 -->
+    <div class="stars" id="stars"></div>
+
+    <div class="header">
+        <h1>旅行规划</h1>
+        <p class="subtitle">点击地图或城市卡片，开启你的旅行探索</p>
+    </div>
+
+    <div class="container">
+        <!-- 中国地图区域 -->
+        <div class="map-section">
+            <h2>中国旅行地图</h2>
+            <div class="map-wrapper" id="mapWrapper">
+                <svg viewBox="0 0 800 680" xmlns="http://www.w3.org/2000/svg" id="chinaMap">
+                    <!-- 简化版中国地图 SVG - 主要省份轮廓 -->
+                    <!-- 新疆 -->
+                    <path class="province" d="M60,60 L200,40 L260,80 L280,140 L260,200 L220,240 L160,260 L100,240 L40,200 L20,140 Z" data-name="新疆"/>
+                    <!-- 西藏 -->
+                    <path class="province" d="M60,250 L160,260 L220,240 L260,260 L260,340 L220,380 L140,400 L60,380 L20,320 Z" data-name="西藏"/>
+                    <!-- 青海 -->
+                    <path class="province" d="M220,240 L260,200 L320,200 L360,220 L360,280 L320,300 L260,300 L260,260 Z" data-name="青海"/>
+                    <!-- 甘肃 -->
+                    <path class="province" d="M260,140 L320,100 L380,100 L420,140 L400,180 L360,220 L320,200 L260,200 Z" data-name="甘肃"/>
+                    <!-- 内蒙古 -->
+                    <path class="province" d="M320,100 L380,60 L460,40 L560,50 L640,80 L660,120 L620,140 L540,140 L480,140 L420,140 L380,100 Z" data-name="内蒙古"/>
+                    <!-- 宁夏 -->
+                    <path class="province" d="M380,140 L400,130 L410,150 L400,180 L380,170 Z" data-name="宁夏"/>
+                    <!-- 陕西 -->
+                    <path class="province" d="M400,180 L420,140 L460,160 L470,200 L460,240 L440,280 L400,280 L380,240 L360,220 Z" data-name="陕西"/>
+                    <!-- 四川 -->
+                    <path class="province" d="M260,300 L320,300 L360,280 L400,280 L420,320 L400,380 L360,400 L300,400 L260,380 L240,340 Z" data-name="四川"/>
+                    <!-- 重庆 -->
+                    <path class="province" d="M400,280 L440,280 L460,310 L440,340 L420,320 Z" data-name="重庆"/>
+                    <!-- 云南 -->
+                    <path class="province" d="M220,380 L260,380 L300,400 L320,440 L300,500 L260,520 L220,500 L200,440 Z" data-name="云南"/>
+                    <!-- 贵州 -->
+                    <path class="province" d="M360,400 L400,380 L440,400 L440,440 L400,460 L360,440 L340,420 Z" data-name="贵州"/>
+                    <!-- 广西 -->
+                    <path class="province" d="M340,460 L400,460 L440,440 L460,460 L460,510 L420,530 L360,530 L320,510 L300,500 L320,440 Z" data-name="广西"/>
+                    <!-- 湖南 -->
+                    <path class="province" d="M440,340 L480,340 L510,380 L500,420 L480,440 L440,440 L440,400 L420,380 Z" data-name="湖南"/>
+                    <!-- 湖北 - 有旅行计划 -->
+                    <path class="province has-plan" d="M440,280 L480,260 L530,270 L550,300 L530,330 L500,340 L480,340 L440,340 L440,310 L460,310 Z" data-name="湖北" data-href="wuhan/武汉_旅行规划.html" data-city="武汉"/>
+                    <!-- 河南 -->
+                    <path class="province" d="M460,200 L500,190 L540,200 L560,230 L540,260 L500,260 L480,260 L440,280 L460,240 Z" data-name="河南"/>
+                    <!-- 山东 -->
+                    <path class="province" d="M540,160 L580,150 L640,160 L660,190 L640,210 L600,220 L560,230 L540,200 Z" data-name="山东"/>
+                    <!-- 河北 -->
+                    <path class="province" d="M540,100 L580,100 L620,120 L620,140 L600,160 L560,160 L540,160 L530,140 Z" data-name="河北"/>
+                    <!-- 山西 -->
+                    <path class="province" d="M480,140 L530,140 L540,160 L540,200 L500,190 L460,200 L470,160 Z" data-name="山西"/>
+                    <!-- 辽宁 -->
+                    <path class="province" d="M600,60 L660,50 L700,70 L710,110 L680,130 L640,120 L620,100 Z" data-name="辽宁"/>
+                    <!-- 吉林 -->
+                    <path class="province" d="M660,20 L720,20 L750,50 L740,80 L700,70 L660,50 Z" data-name="吉林"/>
+                    <!-- 黑龙江 -->
+                    <path class="province" d="M660,0 L720,0 L770,10 L780,40 L750,50 L720,20 L660,20 Z" data-name="黑龙江"/>
+                    <!-- 江苏 -->
+                    <path class="province" d="M560,230 L600,220 L640,240 L640,280 L610,290 L580,280 L550,300 L530,270 Z" data-name="江苏"/>
+                    <!-- 安徽 -->
+                    <path class="province" d="M530,270 L580,280 L580,320 L560,340 L530,330 L550,300 Z" data-name="安徽"/>
+                    <!-- 浙江 -->
+                    <path class="province" d="M580,280 L610,290 L630,320 L620,360 L590,370 L560,340 L580,320 Z" data-name="浙江"/>
+                    <!-- 江西 -->
+                    <path class="province" d="M530,330 L560,340 L590,370 L580,410 L540,430 L510,420 L510,380 L500,340 Z" data-name="江西"/>
+                    <!-- 福建 -->
+                    <path class="province" d="M590,370 L620,360 L650,390 L640,430 L600,450 L580,430 L580,410 Z" data-name="福建"/>
+                    <!-- 广东 -->
+                    <path class="province" d="M460,460 L500,450 L540,430 L580,450 L600,480 L580,520 L540,540 L500,530 L460,510 Z" data-name="广东"/>
+                    <!-- 台湾 -->
+                    <path class="province" d="M660,390 L680,380 L690,420 L680,460 L660,450 L650,420 Z" data-name="台湾"/>
+                    <!-- 海南 - 有旅行计划 -->
+                    <path class="province has-plan" d="M430,560 L470,550 L490,570 L480,600 L450,610 L430,590 Z" data-name="海南" data-href="wenchang/文昌_旅行规划.html" data-city="文昌"/>
+                    <!-- 北京 -->
+                    <circle class="province" cx="572" cy="118" r="8" data-name="北京"/>
+                    <!-- 天津 -->
+                    <circle class="province" cx="590" cy="132" r="6" data-name="天津"/>
+                    <!-- 上海 -->
+                    <circle class="province" cx="640" cy="278" r="6" data-name="上海"/>
+                </svg>
+
+                <!-- 城市标记点 - 武汉 -->
+                <a class="city-marker" data-href="wuhan/武汉_旅行规划.html" data-city="武汉" style="left: 62%; top: 44%;">
+                    <div class="city-dot"></div>
+                    <div class="city-label">武汉</div>
+                </a>
+
+                <!-- 城市标记点 - 文昌 -->
+                <a class="city-marker" data-href="wenchang/文昌_旅行规划.html" data-city="文昌" style="left: 58%; top: 84%;">
+                    <div class="city-dot"></div>
+                    <div class="city-label">文昌</div>
+                </a>
+            </div>
+            <p class="map-hint">* 金色高亮省份为已有旅行规划，点击省份或城市标记进入详情</p>
+        </div>
+
+        <!-- 城市卡片列表 -->
+        <div class="cities-grid">
+            <!-- 武汉 -->
+            <a class="city-card" data-href="wuhan/武汉_旅行规划.html" data-city="武汉">
+                <div class="city-card-banner" id="banner-wuhan">
+                    <img class="slide-img active" src="wuhan/images/huanghelou/1.jpg" alt="黄鹤楼">
+                    <img class="slide-img" src="wuhan/images/donghu/1.jpg" alt="东湖">
+                    <img class="slide-img" src="wuhan/images/hubeimuseum/1.jpg" alt="湖北省博物馆">
+                    <img class="slide-img" src="wuhan/images/changjiangdaqiao/1.jpg" alt="长江大桥">
+                    <img class="slide-img" src="wuhan/images/hubuxiang/1.jpg" alt="户部巷">
+                    <img class="slide-img" src="wuhan/images/guiyuansi/1.jpg" alt="归元寺">
+                    <img class="slide-img" src="wuhan/images/wuda/1.jpg" alt="武汉大学">
+                    <img class="slide-img" src="wuhan/images/tanhualin/1.jpg" alt="昙华林">
+                    <span class="city-name-overlay">武汉</span>
+                </div>
+                <div class="city-card-body">
+                    <p class="city-desc">黄鹤楼下长江畔，户部巷里烟火浓。江城武汉，融古今于一体，汇三镇之繁华。</p>
+                    <div class="city-meta">
+                        <span class="city-tag tag-date">2026年5月</span>
+                        <span class="city-tag tag-days">5天行程</span>
+                        <span class="city-tag tag-spots">16个景点</span>
+                    </div>
+                    <div class="enter-arrow">查看详细规划 →</div>
+                </div>
+            </a>
+
+            <!-- 文昌 -->
+            <a class="city-card" data-href="wenchang/文昌_旅行规划.html" data-city="文昌">
+                <div class="city-card-banner" id="banner-wenchang">
+                    <img class="slide-img active" src="wenchang/images/tonggul/1.jpg" alt="铜鼓岭">
+                    <img class="slide-img" src="wenchang/images/hangtianzx/1.jpg" alt="航天中心">
+                    <img class="slide-img" src="wenchang/images/shitoug/1.jpg" alt="石头公园">
+                    <img class="slide-img" src="wenchang/images/dongjiaoyelin/1.jpg" alt="东郊椰林">
+                    <img class="slide-img" src="wenchang/images/fengjiawan/1.jpg" alt="冯家湾">
+                    <img class="slide-img" src="wenchang/images/yezidgy/1.jpg" alt="椰子大观园">
+                    <img class="slide-img" src="wenchang/images/gaolong/1.jpg" alt="高隆湾">
+                    <img class="slide-img" src="wenchang/images/chunguangyezi/1.jpg" alt="春光椰子">
+                    <span class="city-name-overlay">文昌</span>
+                </div>
+                <div class="city-card-body">
+                    <p class="city-desc">椰风海韵航天城，铜鼓岭上观沧海。文昌，海南东线上的璀璨明珠，火箭与海浪共舞。</p>
+                    <div class="city-meta">
+                        <span class="city-tag tag-date">2026年5月</span>
+                        <span class="city-tag tag-days">5天行程</span>
+                        <span class="city-tag tag-spots">12个景点</span>
+                    </div>
+                    <div class="enter-arrow">查看详细规划 →</div>
+                </div>
+            </a>
+        </div>
+    </div>
+
+    <div class="footer">
+        旅行规划 · 探索中国之美
+    </div>
+
+    <!-- 浮动按钮 -->
+    <div class="float-buttons">
+        <button class="float-btn float-btn-top" id="btnTop" onclick="scrollToTop()" title="回到顶部">⬆</button>
+        <button class="float-btn float-btn-theme" id="btnTheme" onclick="toggleTheme()" title="切换主题">🌙</button>
+    </div>
+
+    <script>
+        // ========== 登录验证 ==========
+        // 配置账号密码（可自行修改）
+        const VALID_USERS = {
+            'luojie': 'luojie123',
+            'dongchen': 'dongchen123'
+        };
+
+        // 检查登录状态
+        (function checkLoginStatus() {
+            const isLoggedIn = sessionStorage.getItem('isLoggedIn');
+            if (isLoggedIn === 'true') {
+                document.getElementById('loginOverlay').classList.add('hidden');
+            }
+        })();
+
+        // 登录处理
+        function handleLogin() {
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            const errorEl = document.getElementById('loginError');
+
+            if (VALID_USERS[username] && VALID_USERS[username] === password) {
+                // 登录成功
+                sessionStorage.setItem('isLoggedIn', 'true');
+                document.getElementById('loginOverlay').classList.add('hidden');
+                errorEl.classList.remove('show');
+            } else {
+                // 登录失败
+                errorEl.classList.add('show');
+                document.getElementById('loginPassword').value = '';
+            }
+        }
+
+        // 回车键登录
+        document.getElementById('loginUsername').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') document.getElementById('loginPassword').focus();
+        });
+        document.getElementById('loginPassword').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleLogin();
+        });
+
+        // ========== 生成星空粒子 ==========
+        (function() {
+            const container = document.getElementById('stars');
+            const count = 80;
+            for (let i = 0; i < count; i++) {
+                const star = document.createElement('div');
+                star.className = 'star';
+                const size = Math.random() * 2.5 + 0.5;
+                star.style.cssText = `
+                    width: ${size}px; height: ${size}px;
+                    left: ${Math.random() * 100}%;
+                    top: ${Math.random() * 100}%;
+                    --dur: ${Math.random() * 3 + 2}s;
+                    animation-delay: ${Math.random() * 3}s;
+                `;
+                container.appendChild(star);
+            }
+        })();
+
+        // 页面跳转展开特效
+        let isNavigating = false;
+        function navigateWithTransition(e, href, cityName) {
+            e.preventDefault();
+            e.stopPropagation();
+            if (isNavigating) return;
+            isNavigating = true;
+
+            const x = e.clientX || (e.touches && e.touches[0].clientX) || window.innerWidth / 2;
+            const y = e.clientY || (e.touches && e.touches[0].clientY) || window.innerHeight / 2;
+
+            // 点击波纹 - 固定尺寸，只用 transform 缩放
+            for (let i = 0; i < 2; i++) {
+                const ripple = document.createElement('div');
+                ripple.className = 'click-ripple';
+                ripple.style.left = x + 'px';
+                ripple.style.top = y + 'px';
+                ripple.style.animationDelay = (i * 0.1) + 's';
+                document.body.appendChild(ripple);
+                ripple.addEventListener('animationend', () => ripple.remove());
+            }
+
+            // 计算覆盖全屏所需的圆半径
+            const maxDist = Math.max(
+                Math.hypot(x, y),
+                Math.hypot(window.innerWidth - x, y),
+                Math.hypot(x, window.innerHeight - y),
+                Math.hypot(window.innerWidth - x, window.innerHeight - y)
+            );
+            const diameter = maxDist * 2;
+
+            // 创建展开遮罩 - 纯色背景，避免 radial-gradient 开销
+            const overlay = document.createElement('div');
+            overlay.className = 'page-transition-overlay';
+            overlay.style.cssText = `left:${x - maxDist}px;top:${y - maxDist}px;width:${diameter}px;height:${diameter}px;`;
+
+            // 城市名
+            const nameEl = document.createElement('div');
+            nameEl.className = 'transition-city-name';
+            nameEl.textContent = cityName;
+            overlay.appendChild(nameEl);
+
+            document.body.appendChild(overlay);
+
+            // 用双 rAF 确保浏览器完成布局后再触发动画，避免首帧卡顿
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    overlay.classList.add('expanding');
+                });
+            });
+
+            // 动画完成后跳转
+            setTimeout(() => {
+                window.location.href = href;
+            }, 700);
+        }
+
+        // 绑定所有可点击元素
+        // 1. SVG 省份
+        document.querySelectorAll('.province.has-plan').forEach(el => {
+            el.addEventListener('click', function(e) {
+                const href = this.getAttribute('data-href');
+                const city = this.getAttribute('data-city');
+                if (href) navigateWithTransition(e, href, city);
+            });
+        });
+
+        // 2. 城市标记点
+        document.querySelectorAll('.city-marker[data-href]').forEach(el => {
+            el.addEventListener('click', function(e) {
+                const href = this.getAttribute('data-href');
+                const city = this.getAttribute('data-city');
+                navigateWithTransition(e, href, city);
+            });
+        });
+
+        // 3. 城市卡片
+        document.querySelectorAll('.city-card[data-href]').forEach(el => {
+            el.addEventListener('click', function(e) {
+                const href = this.getAttribute('data-href');
+                const city = this.getAttribute('data-city');
+                navigateWithTransition(e, href, city);
+            });
+        });
+
+        // 城市卡片轮播图
+        document.querySelectorAll('.city-card-banner').forEach(banner => {
+            const imgs = banner.querySelectorAll('.slide-img');
+            if (imgs.length <= 1) return;
+            let cur = 0;
+            setInterval(() => {
+                imgs[cur].classList.remove('active');
+                cur = (cur + 1) % imgs.length;
+                imgs[cur].classList.add('active');
+            }, 3000);
+        });
+
+        // 置顶按钮
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        window.addEventListener('scroll', () => {
+            const btn = document.getElementById('btnTop');
+            if (window.scrollY > 300) {
+                btn.classList.add('visible');
+            } else {
+                btn.classList.remove('visible');
+            }
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const body = document.body;
+            const btn = document.getElementById('btnTheme');
+            body.classList.toggle('light-theme');
+            const isLight = body.classList.contains('light-theme');
+            btn.textContent = isLight ? '🌞' : '🌙';
+            localStorage.setItem('theme', isLight ? 'light' : 'dark');
+        }
+
+        // 初始化主题
+        (function initTheme() {
+            const saved = localStorage.getItem('theme');
+            if (saved === 'light') {
+                document.body.classList.add('light-theme');
+                document.getElementById('btnTheme').textContent = '🌞';
+            }
+        })();
+    </script>
+</body>
+</html>

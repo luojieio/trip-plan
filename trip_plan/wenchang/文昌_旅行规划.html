@@ -1,0 +1,1822 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文昌 旅行规划</title>
+    <script src="https://webapi.amap.com/maps?v=2.0&key=2bdadf69fd2e2dbc18de423ddacd04f6"></script>
+    <style>
+        :root {
+            --glass-bg: rgba(20, 20, 30, 0.85);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            --accent-gold: #d4af37;
+            --accent-purple: #9b59b6;
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.7);
+            --gradient-1: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            --gradient-gold: linear-gradient(135deg, #d4af37, #f4e4bc);
+            --day1-color: #FF6B6B;
+            --day2-color: #4ECDC4;
+            --day3-color: #FFE66D;
+            --day4-color: #95E1D3;
+            --day5-color: #DDA0DD;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--gradient-1);
+            min-height: 100vh;
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            box-shadow: var(--glass-shadow);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        .glass-card-sm {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 16px;
+        }
+        .header {
+            text-align: center;
+            padding: 60px 20px;
+            background: linear-gradient(180deg, rgba(212, 175, 55, 0.1) 0%, transparent 100%);
+        }
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            background: var(--gradient-gold);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 16px;
+        }
+        .header .subtitle { font-size: 1.2rem; color: var(--text-secondary); }
+        .travel-dates {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 12px 24px;
+            background: rgba(212, 175, 55, 0.15);
+            border: 1px solid var(--accent-gold);
+            border-radius: 30px;
+            color: var(--accent-gold);
+            font-weight: 500;
+        }
+        .start-point {
+            display: inline-block;
+            margin-top: 12px;
+            margin-left: 12px;
+            padding: 12px 24px;
+            background: rgba(76, 175, 80, 0.15);
+            border: 1px solid #4CAF50;
+            border-radius: 30px;
+            color: #4CAF50;
+            font-weight: 500;
+        }
+        .container { max-width: 1400px; margin: 0 auto; padding: 0 24px 60px; }
+        .grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+        @media (max-width: 1024px) { .grid-2 { grid-template-columns: 1fr; } }
+
+        /* 平板端适配 */
+        @media (max-width: 768px) {
+            .container { padding: 16px; }
+            .header { padding: 24px 16px; }
+            .header h1 { font-size: 1.8rem; }
+            .header .subtitle { font-size: 0.9rem; }
+            .map-container { height: 400px; }
+            .map-legend { bottom: 10px; left: 10px; gap: 6px; }
+            .legend-item { padding: 4px 8px; font-size: 0.7rem; }
+            .spot-card { flex-direction: column; align-items: flex-start; gap: 12px; }
+            .spot-carousel { width: 100%; height: 180px; margin-left: 0; }
+            .spot-time { flex-direction: row; gap: 8px; }
+            .section-title { font-size: 1.25rem; }
+        }
+
+        /* 手机端适配 */
+        @media (max-width: 480px) {
+            .container { padding: 12px; }
+            .header { padding: 20px 12px; }
+            .header h1 { font-size: 1.5rem; }
+            .map-container { height: 320px; }
+            .map-legend { bottom: 8px; left: 8px; gap: 4px; }
+            .legend-item { padding: 3px 6px; font-size: 0.65rem; }
+            .legend-dot { width: 8px; height: 8px; }
+            .spot-card { padding: 12px; }
+            .spot-carousel { height: 160px; }
+            .spot-name { font-size: 1rem; }
+            .spot-desc { font-size: 0.8rem; }
+            .spot-tags { gap: 4px; }
+            .spot-tag { padding: 2px 6px; font-size: 0.65rem; }
+            .day-card { padding: 16px; }
+            .day-number { font-size: 1.5rem; }
+            .transport-tag { font-size: 0.75rem; padding: 4px 8px; }
+            .mini-spot { padding: 10px; }
+            .mini-icon { width: 32px; height: 32px; font-size: 1.2rem; }
+            .mini-name { font-size: 0.85rem; }
+            .entertainment-spot { padding: 12px; }
+            .ent-icon { width: 36px; height: 36px; font-size: 1.3rem; }
+            .meal-section { padding: 12px; }
+            .meal-item { padding: 10px; }
+            .budget-item { padding: 12px; }
+            .budget-item .icon { font-size: 1.5rem; }
+            .budget-item .amount { font-size: 1.2rem; }
+            .section-title { font-size: 1.1rem; }
+            .glass-card { padding: 16px; border-radius: 12px; }
+            .map-spot-tooltip { display: none; }
+        }
+        .section-title {
+            font-size: 1.5rem; font-weight: 600; margin-bottom: 20px;
+            display: flex; align-items: center; gap: 12px;
+        }
+        .section-title::before {
+            content: ''; width: 4px; height: 24px;
+            background: var(--gradient-gold); border-radius: 2px;
+        }
+        .map-container { height: 550px; border-radius: 16px; overflow: hidden; position: relative; }
+        #map { width: 100%; height: 100%; }
+        .map-legend {
+            position: absolute; bottom: 20px; left: 20px; z-index: 100;
+            display: flex; gap: 10px; flex-wrap: wrap; max-width: 90%;
+        }
+        .legend-item {
+            display: flex; align-items: center; gap: 6px; padding: 6px 12px;
+            background: var(--glass-bg); backdrop-filter: blur(10px);
+            border-radius: 16px; font-size: 0.75rem; cursor: pointer;
+            transition: all 0.3s ease; user-select: none; border: 1.5px solid transparent;
+        }
+        .legend-item[data-day="home"] { cursor: default; }
+        .legend-item.active { border-color: rgba(255, 255, 255, 0.3); box-shadow: 0 0 8px rgba(255, 255, 255, 0.1); }
+        .legend-item:not([data-day="home"]):not(.active) { opacity: 0.4; filter: grayscale(0.6); }
+        .legend-item:not([data-day="home"]):hover { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3); }
+        .legend-dot { width: 12px; height: 12px; border-radius: 50%; }
+        .legend-dot.home { background: #4CAF50; }
+        .legend-dot.day1 { background: var(--day1-color); }
+        .legend-dot.day2 { background: var(--day2-color); }
+        .legend-dot.day3 { background: var(--day3-color); }
+        .legend-dot.day4 { background: var(--day4-color); }
+        .legend-dot.day5 { background: var(--day5-color); }
+        .map-spot-tooltip {
+            position: absolute; bottom: calc(100% + 8px); left: 50%;
+            transform: translateX(-50%) translateY(6px); width: 160px;
+            background: rgba(15, 15, 25, 0.95); border-radius: 10px; overflow: hidden;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.6); border: 1px solid rgba(255,255,255,0.15);
+            opacity: 0; pointer-events: none; transition: opacity 0.25s ease, transform 0.25s ease; z-index: 200;
+        }
+        .map-spot-marker { z-index: 1; transition: z-index 0s; }
+        .map-spot-marker:hover { z-index: 9999 !important; }
+        .map-spot-marker:hover .map-spot-tooltip { opacity: 1; transform: translateX(-50%) translateY(0); }
+        .map-spot-tooltip img { width: 100%; height: 100px; object-fit: cover; display: block; }
+        .map-spot-tooltip .tooltip-name { padding: 6px 8px; font-size: 11px; color: #fff; text-align: center; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .map-transport-marker { display: flex; flex-direction: column; align-items: center; gap: 1px; pointer-events: none; }
+        .map-transport-icon { font-size: 18px; line-height: 1; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5)); }
+        .map-transport-duration { font-size: 9px; color: #fff; background: rgba(0,0,0,0.7); padding: 1px 6px; border-radius: 6px; white-space: nowrap; font-weight: 600; letter-spacing: 0.3px; }
+        .budget-panel { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+        @media (max-width: 768px) { .budget-panel { grid-template-columns: repeat(2, 1fr); } }
+        .budget-item { text-align: center; padding: 20px; }
+        .budget-item .icon { font-size: 2rem; margin-bottom: 12px; }
+        .budget-item .label { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 8px; }
+        .budget-item .amount { font-size: 1.5rem; font-weight: 700; color: var(--accent-gold); }
+        .budget-total { text-align: center; padding: 24px; margin-top: 16px; border-top: 1px solid var(--glass-border); }
+        .budget-total .label { font-size: 1rem; color: var(--text-secondary); margin-bottom: 8px; }
+        .budget-total .amount { font-size: 2.5rem; font-weight: 700; background: var(--gradient-gold); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .day-card { position: relative; overflow: hidden; }
+        .day-card[data-day="1"] { border-left: 4px solid var(--day1-color); }
+        .day-card[data-day="2"] { border-left: 4px solid var(--day2-color); }
+        .day-card[data-day="3"] { border-left: 4px solid var(--day3-color); }
+        .day-card[data-day="4"] { border-left: 4px solid var(--day4-color); }
+        .day-card[data-day="5"] { border-left: 4px solid var(--day5-color); }
+        .day-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid var(--glass-border); }
+        .day-number { font-size: 2rem; font-weight: 700; background: var(--gradient-gold); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .day-card[data-day="1"] .day-number { background: linear-gradient(135deg, var(--day1-color), #ff8e8e); -webkit-background-clip: text; }
+        .day-card[data-day="2"] .day-number { background: linear-gradient(135deg, var(--day2-color), #7ee8e1); -webkit-background-clip: text; }
+        .day-card[data-day="3"] .day-number { background: linear-gradient(135deg, var(--day3-color), #fff09e); -webkit-background-clip: text; }
+        .day-card[data-day="4"] .day-number { background: linear-gradient(135deg, var(--day4-color), #b8f0e5); -webkit-background-clip: text; }
+        .day-card[data-day="5"] .day-number { background: linear-gradient(135deg, var(--day5-color), #ecc8ec); -webkit-background-clip: text; }
+        .day-date { color: var(--text-secondary); font-size: 0.9rem; }
+        .day-weather { display: flex; align-items: center; gap: 8px; padding: 8px 16px; background: rgba(255, 255, 255, 0.05); border-radius: 20px; font-size: 0.85rem; }
+        .route-info { padding: 12px 16px; background: rgba(76, 175, 80, 0.1); border: 1px solid rgba(76, 175, 80, 0.3); border-radius: 12px; margin-bottom: 16px; font-size: 0.9rem; }
+        .route-header { display: flex; justify-content: space-between; align-items: center; cursor: pointer; padding: 4px 0; }
+        .route-header:hover { opacity: 0.8; }
+        .route-info .route-title { color: #4CAF50; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+        .route-arrow { color: #4CAF50; font-size: 0.8rem; transition: transform 0.2s; }
+        .route-summary { color: var(--text-secondary); font-size: 0.85rem; margin-top: 4px; }
+        .route-detail { display: none; margin-top: 16px; padding-top: 16px; border-top: 1px dashed rgba(76, 175, 80, 0.3); }
+        .route-step { display: flex; gap: 12px; margin-bottom: 12px; padding: 10px; background: rgba(76, 175, 80, 0.05); border-radius: 10px; }
+        .route-step-icon { width: 32px; height: 32px; border-radius: 50%; background: rgba(76, 175, 80, 0.2); display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 0.9rem; }
+        .route-step-content { flex: 1; }
+        .route-step-title { font-weight: 600; color: #4CAF50; font-size: 0.85rem; margin-bottom: 4px; }
+        .route-step-desc { color: var(--text-secondary); font-size: 0.8rem; line-height: 1.4; }
+        .weather-tip { margin-top: 12px; padding: 10px 14px; background: rgba(255, 193, 7, 0.1); border: 1px solid rgba(255, 193, 7, 0.3); border-radius: 10px; display: flex; align-items: flex-start; gap: 10px; }
+        .weather-tip-icon { font-size: 1.2rem; }
+        .weather-tip-content { flex: 1; }
+        .weather-tip-title { font-weight: 600; color: #FFC107; font-size: 0.85rem; margin-bottom: 4px; }
+        .weather-tip-desc { color: var(--text-secondary); font-size: 0.8rem; line-height: 1.4; }
+        .spot-card { display: flex; align-items: center; gap: 16px; margin-bottom: 16px; padding: 16px; background: rgba(255, 255, 255, 0.03); border-radius: 16px; border: 1px solid rgba(255, 255, 255, 0.05); transition: all 0.3s ease; overflow: hidden; }
+        .spot-card:hover { background: rgba(255, 255, 255, 0.06); border-color: rgba(212, 175, 55, 0.3); transform: translateY(-2px); }
+        .spot-time { display: flex; flex-direction: column; align-items: center; min-width: 60px; }
+        .spot-time .time { font-size: 1.1rem; font-weight: 600; color: var(--accent-gold); }
+        .spot-time .duration { font-size: 0.75rem; color: var(--text-secondary); margin-top: 4px; }
+        .spot-image { width: 140px; height: 100px; border-radius: 12px; object-fit: cover; flex-shrink: 0; border: 2px solid rgba(255, 255, 255, 0.1); transition: transform 0.3s ease; display: none; }
+        .spot-card:hover .spot-image { transform: scale(1.05); }
+        .spot-carousel { width: 240px; height: 150px; perspective: 800px; position: relative; flex-shrink: 0; overflow: hidden; cursor: grab; border-radius: 14px; margin-left: auto; }
+        .spot-carousel:active { cursor: grabbing; }
+        .spot-carousel .carousel-track { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; }
+        .spot-carousel .carousel-slide { position: absolute; width: 180px; height: 130px; left: 50%; top: 50%; border-radius: 10px; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.5); transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94); cursor: pointer; backface-visibility: hidden; }
+        .spot-carousel .carousel-slide img { width: 100%; height: 100%; object-fit: cover; display: block; pointer-events: none; }
+        .spot-carousel .carousel-slide.active { z-index: 10; transform: translate(-50%, -50%) scale(1) rotateY(0deg); box-shadow: 0 8px 30px rgba(212,175,55,0.25); border: 2px solid rgba(212,175,55,0.4); }
+        .spot-carousel .carousel-slide.prev { z-index: 5; transform: translate(-95%, -50%) scale(0.75) rotateY(30deg); opacity: 0.6; filter: brightness(0.65); }
+        .spot-carousel .carousel-slide.next { z-index: 5; transform: translate(-5%, -50%) scale(0.75) rotateY(-30deg); opacity: 0.6; filter: brightness(0.65); }
+        .spot-carousel .carousel-slide.far-prev { z-index: 2; transform: translate(-130%, -50%) scale(0.5) rotateY(45deg); opacity: 0; filter: brightness(0.4); }
+        .spot-carousel .carousel-slide.far-next { z-index: 2; transform: translate(30%, -50%) scale(0.5) rotateY(-45deg); opacity: 0; filter: brightness(0.4); }
+        .spot-carousel .carousel-slide.hidden { z-index: 0; transform: translate(-50%, -50%) scale(0.3) rotateY(0deg); opacity: 0; pointer-events: none; }
+        .carousel-counter { position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%); font-size: 0.65rem; color: rgba(255,255,255,0.6); background: rgba(0,0,0,0.55); padding: 2px 10px; border-radius: 8px; white-space: nowrap; z-index: 20; }
+        .lightbox-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.92); z-index: 10000; justify-content: center; align-items: center; flex-direction: column; }
+        .lightbox-overlay.show { display: flex; animation: lbFadeIn 0.3s ease; }
+        @keyframes lbFadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .lightbox-img-wrap { position: relative; max-width: 90vw; max-height: 80vh; }
+        .lightbox-img-wrap img { max-width: 90vw; max-height: 80vh; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); object-fit: contain; }
+        .lightbox-close { position: absolute; top: 20px; right: 20px; width: 44px; height: 44px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); border-radius: 50%; color: white; font-size: 1.5rem; cursor: pointer; z-index: 10001; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
+        .lightbox-close:hover { background: rgba(255,255,255,0.3); }
+        .lightbox-nav { position: absolute; top: 50%; transform: translateY(-50%); width: 50px; height: 50px; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2); border-radius: 50%; color: white; font-size: 1.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; z-index: 10001; }
+        .lightbox-nav:hover { background: rgba(255,255,255,0.25); }
+        .lightbox-prev { left: 20px; }
+        .lightbox-next { right: 20px; }
+        .lightbox-title { color: rgba(255,255,255,0.8); font-size: 0.9rem; margin-top: 16px; text-align: center; }
+        .lightbox-dots { display: flex; gap: 8px; margin-top: 12px; justify-content: center; }
+        .lightbox-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.3); cursor: pointer; transition: all 0.2s; }
+        .lightbox-dot.active { background: var(--accent-gold); transform: scale(1.3); }
+        .spot-info { flex: 1; min-width: 0; }
+        .spot-name { font-size: 1.1rem; font-weight: 600; margin-bottom: 8px; }
+        .spot-address { font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 8px; }
+        .spot-desc { font-size: 0.9rem; color: var(--text-secondary); line-height: 1.5; }
+        .reservation-alert { display: inline-flex; align-items: center; gap: 8px; margin-top: 12px; padding: 8px 16px; background: rgba(244, 67, 54, 0.15); border: 1px solid rgba(244, 67, 54, 0.3); border-radius: 8px; font-size: 0.85rem; }
+        .reservation-alert .alert-icon { background: #f44336; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
+        .transport-tag { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; background: rgba(155, 89, 182, 0.15); border: 1px solid rgba(155, 89, 182, 0.3); border-radius: 20px; font-size: 0.8rem; color: #bb8fce; margin: 12px 0; }
+        .mini-spot { display: flex; align-items: center; gap: 14px; margin-bottom: 14px; padding: 12px 16px; background: linear-gradient(135deg, rgba(255,255,255,0.04), rgba(212,175,55,0.04)); border-radius: 14px; border: 1px dashed rgba(212,175,55,0.25); transition: all 0.3s ease; position: relative; }
+        .mini-spot:hover { background: linear-gradient(135deg, rgba(255,255,255,0.07), rgba(212,175,55,0.08)); border-color: rgba(212,175,55,0.4); transform: translateY(-1px); }
+        .mini-spot .mini-icon { font-size: 1.5rem; flex-shrink: 0; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: rgba(212,175,55,0.1); border-radius: 12px; }
+        .mini-spot .mini-info { flex: 1; min-width: 0; }
+        .mini-spot .mini-name { font-size: 0.9rem; font-weight: 600; color: var(--accent-gold); margin-bottom: 2px; }
+        .mini-spot .mini-desc { font-size: 0.78rem; color: var(--text-secondary); line-height: 1.4; }
+        .mini-spot .mini-tag { display: inline-block; font-size: 0.65rem; padding: 2px 8px; border-radius: 10px; background: rgba(212,175,55,0.15); color: var(--accent-gold); margin-top: 4px; margin-right: 4px; }
+        .entertainment-spot { display: flex; align-items: center; gap: 14px; margin: 16px 0; padding: 14px 18px; background: linear-gradient(135deg, rgba(155,89,182,0.08), rgba(52,152,219,0.08)); border-radius: 16px; border: 1px solid rgba(155,89,182,0.3); transition: all 0.3s ease; position: relative; overflow: hidden; }
+        .entertainment-spot::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, #9b59b6, #3498db, #9b59b6); background-size: 200% 100%; animation: shimmer 3s ease infinite; }
+        @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+        .entertainment-spot:hover { background: linear-gradient(135deg, rgba(155,89,182,0.14), rgba(52,152,219,0.14)); border-color: rgba(155,89,182,0.5); transform: translateY(-2px); box-shadow: 0 6px 20px rgba(155,89,182,0.15); }
+        .entertainment-spot .ent-icon { font-size: 1.8rem; flex-shrink: 0; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, rgba(155,89,182,0.15), rgba(52,152,219,0.15)); border-radius: 14px; }
+        .entertainment-spot .ent-info { flex: 1; min-width: 0; }
+        .entertainment-spot .ent-name { font-size: 0.95rem; font-weight: 600; color: #bb86fc; margin-bottom: 2px; }
+        .entertainment-spot .ent-desc { font-size: 0.78rem; color: var(--text-secondary); line-height: 1.4; }
+        .entertainment-spot .ent-meta { display: flex; gap: 8px; margin-top: 4px; flex-wrap: wrap; }
+        .entertainment-spot .ent-tag { display: inline-block; font-size: 0.65rem; padding: 2px 8px; border-radius: 10px; background: rgba(155,89,182,0.15); color: #bb86fc; }
+        .entertainment-spot .ent-price { display: inline-block; font-size: 0.65rem; padding: 2px 8px; border-radius: 10px; background: rgba(52,152,219,0.15); color: #5dade2; }
+        .meal-section { margin-top: 20px; padding-top: 20px; border-top: 1px solid var(--glass-border); }
+        .meal-title { font-size: 1rem; font-weight: 600; margin-bottom: 12px; color: var(--accent-gold); }
+        .meal-group { margin-bottom: 14px; }
+        .meal-group-title { font-size: 0.85rem; font-weight: 600; margin-bottom: 8px; padding: 4px 12px; border-radius: 8px; display: inline-block; }
+        .meal-group-title.breakfast { background: rgba(255,183,77,0.15); color: #ffb74d; }
+        .meal-group-title.lunch { background: rgba(76,175,80,0.15); color: #81c784; }
+        .meal-group-title.dinner { background: rgba(144,115,255,0.15); color: #b39ddb; }
+        .meal-item { display: flex; justify-content: space-between; align-items: center; padding: 12px; background: rgba(255, 255, 255, 0.03); border-radius: 12px; margin-bottom: 8px; }
+        .meal-info { flex: 1; }
+        .meal-name { font-weight: 500; margin-bottom: 4px; }
+        .meal-desc { font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 3px; line-height: 1.4; }
+        .meal-address { font-size: 0.8rem; color: var(--text-secondary); }
+        .meal-price { color: var(--accent-gold); font-weight: 600; white-space: nowrap; margin-left: 12px; }
+        .float-buttons { position: fixed; right: 24px; bottom: 32px; display: flex; flex-direction: column; gap: 12px; z-index: 9000; }
+        .float-btn { width: 52px; height: 52px; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; box-shadow: 0 4px 20px rgba(0,0,0,0.4); transition: transform 0.3s, box-shadow 0.3s; }
+        .float-btn:hover { transform: scale(1.1); box-shadow: 0 6px 28px rgba(0,0,0,0.5); }
+        .float-btn-chat { background: linear-gradient(135deg, #9b59b6, #3498db); color: white; animation: floatPulse 3s ease-in-out infinite; }
+        @keyframes floatPulse { 0%, 100% { box-shadow: 0 4px 20px rgba(155,89,182,0.4); } 50% { box-shadow: 0 4px 28px rgba(155,89,182,0.7); } }
+        .float-btn-top { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.15); color: var(--text-secondary); opacity: 0; pointer-events: none; transition: opacity 0.3s, transform 0.3s; }
+        .float-btn-top.visible { opacity: 1; pointer-events: auto; }
+        .float-btn-top:hover { color: var(--accent-gold); border-color: rgba(212,175,55,0.4); }
+        .float-btn-home { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.15); color: var(--text-secondary); font-size: 1.3rem; }
+        .float-btn-home:hover { color: var(--accent-gold); border-color: rgba(212,175,55,0.4); }
+        .float-btn-theme { background: rgba(255,255,255,0.1); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.15); color: var(--text-secondary); font-size: 1.3rem; }
+        .float-btn-theme:hover { color: var(--accent-gold); border-color: rgba(212,175,55,0.4); }
+        /* 白天主题 */
+        body.light-theme { --bg-primary: #f5f7fa; --bg-secondary: #ffffff; --glass-bg: rgba(255, 255, 255, 0.8); --glass-border: rgba(0, 0, 0, 0.1); --text-primary: #1a1a2e; --text-secondary: #4a4a6a; background: linear-gradient(135deg, #e8f4f8 0%, #f5f7fa 50%, #fef9f3 100%); }
+        body.light-theme .glass-card { background: var(--glass-bg); border-color: var(--glass-border); }
+        body.light-theme .day-card { background: var(--glass-bg); }
+        body.light-theme .spot-card { background: rgba(0, 0, 0, 0.03); border-color: rgba(0, 0, 0, 0.08); }
+        body.light-theme .spot-card:hover { background: rgba(0, 0, 0, 0.05); }
+        body.light-theme .chat-panel { background: rgba(255, 255, 255, 0.95); border-color: var(--glass-border); }
+        body.light-theme .chat-bubble { background: rgba(0, 0, 0, 0.05); }
+        body.light-theme .chat-message.user .chat-bubble { background: rgba(155, 89, 182, 0.15); }
+        body.light-theme .float-btn-top, body.light-theme .float-btn-home, body.light-theme .float-btn-theme { background: rgba(255, 255, 255, 0.9); border-color: rgba(0, 0, 0, 0.1); color: var(--text-primary); }
+        body.light-theme .mini-spot { background: linear-gradient(135deg, rgba(212,175,55,0.08), rgba(255,255,255,0.5)); }
+        body.light-theme .meal-section { background: rgba(255, 255, 255, 0.6); }
+        body.light-theme .transport-tag { background: rgba(0, 0, 0, 0.05); }
+        .chat-panel { position: fixed; right: 24px; bottom: 100px; width: 380px; max-height: 520px; background: rgba(20, 20, 35, 0.95); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); border: 1px solid rgba(255,255,255,0.12); border-radius: 20px; box-shadow: 0 12px 48px rgba(0,0,0,0.6); z-index: 9001; display: flex; flex-direction: column; overflow: hidden; transform: scale(0.8) translateY(20px); opacity: 0; pointer-events: none; transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.25s ease; transform-origin: bottom right; }
+        .chat-panel.open { transform: scale(1) translateY(0); opacity: 1; pointer-events: auto; }
+        .chat-panel-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; background: linear-gradient(135deg, rgba(155,89,182,0.15), rgba(52,152,219,0.15)); border-bottom: 1px solid rgba(255,255,255,0.08); }
+        .chat-panel-header h3 { font-size: 0.95rem; font-weight: 600; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
+        .chat-panel-close { width: 28px; height: 28px; border-radius: 50%; border: none; background: rgba(255,255,255,0.08); color: var(--text-secondary); font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
+        .chat-panel-close:hover { background: rgba(255,255,255,0.15); color: white; }
+        @media (max-width: 480px) { .chat-panel { right: 8px; bottom: 90px; width: calc(100vw - 16px); max-height: 70vh; } .float-buttons { right: 16px; bottom: 20px; } }
+        .chat-messages { flex: 1; min-height: 260px; max-height: 360px; overflow-y: auto; padding: 16px; background: rgba(0, 0, 0, 0.15); border-radius: 16px; margin-bottom: 16px; }
+        .chat-message { margin-bottom: 16px; display: flex; gap: 12px; }
+        .chat-message.user { flex-direction: row-reverse; }
+        .chat-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--gradient-gold); display: flex; align-items: center; justify-content: center; font-size: 0.9rem; flex-shrink: 0; }
+        .chat-message.user .chat-avatar { background: var(--accent-purple); }
+        .chat-bubble { max-width: 80%; padding: 12px 16px; background: rgba(255, 255, 255, 0.05); border-radius: 16px; border-top-left-radius: 4px; }
+        .chat-message.user .chat-bubble { background: rgba(155, 89, 182, 0.2); border-radius: 16px; border-top-right-radius: 4px; }
+        .chat-input-wrap { display: flex; gap: 10px; padding: 12px 16px; border-top: 1px solid rgba(255,255,255,0.08); background: rgba(0,0,0,0.1); }
+        .chat-input { flex: 1; padding: 10px 16px; background: rgba(255, 255, 255, 0.05); border: 1px solid var(--glass-border); border-radius: 20px; color: var(--text-primary); font-size: 0.9rem; outline: none; transition: border-color 0.3s; }
+        .chat-input:focus { border-color: var(--accent-gold); }
+        .chat-input::placeholder { color: var(--text-secondary); }
+        .chat-send { padding: 10px 20px; background: var(--gradient-gold); border: none; border-radius: 20px; color: #1a1a2e; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; white-space: nowrap; }
+        .chat-send:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(212, 175, 55, 0.3); }
+        .chat-send:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+        .loading-dots span { animation: blink 1.4s infinite both; }
+        .loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+        .loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes blink { 0%, 80%, 100% { opacity: 0; } 40% { opacity: 1; } }
+        .tips-list { list-style: none; }
+        .tips-list li { padding: 12px 16px; background: rgba(255, 255, 255, 0.03); border-radius: 12px; margin-bottom: 8px; display: flex; align-items: flex-start; gap: 12px; }
+        .tips-list li::before { content: '💡'; flex-shrink: 0; }
+        .reservation-list { list-style: none; }
+        .reservation-list li { display: flex; justify-content: space-between; align-items: center; padding: 16px; background: rgba(244, 67, 54, 0.05); border: 1px solid rgba(244, 67, 54, 0.15); border-radius: 12px; margin-bottom: 12px; }
+        .reservation-spot { font-weight: 600; }
+        .reservation-channel { font-size: 0.85rem; color: var(--text-secondary); margin-top: 4px; }
+        .reservation-link { padding: 10px 20px; background: linear-gradient(135deg, #FF6B6B, #ee5a5a); border: none; border-radius: 20px; color: white; text-decoration: none; font-size: 0.85rem; font-weight: 600; transition: all 0.3s; box-shadow: 0 4px 12px rgba(244, 67, 54, 0.3); }
+        .reservation-link:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(244, 67, 54, 0.4); }
+        .footer { text-align: center; padding: 40px; color: var(--text-secondary); font-size: 0.85rem; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.2); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255, 255, 255, 0.3); }
+        /* 返回首页缩小特效 */
+        .page-shrink-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 99999; pointer-events: none; overflow: hidden; }
+        .page-shrink-overlay .shrink-mask { position: absolute; border-radius: 50%; background: radial-gradient(circle, transparent 0%, transparent 38%, rgba(15,20,40,0.97) 62%); animation: shrinkCircle 0.8s cubic-bezier(0.4, 0, 0.8, 0.4) forwards; }
+        @keyframes shrinkCircle { 0% { transform: scale(1); } 100% { transform: scale(0); } }
+        .page-shrink-overlay .shrink-flash { position: absolute; border-radius: 50%; border: 2px solid rgba(212,175,55,0.6); pointer-events: none; animation: shrinkRipple 0.6s ease-in forwards; }
+        @keyframes shrinkRipple { 0% { transform: translate(-50%,-50%) scale(3); opacity: 0; } 50% { opacity: 0.8; } 100% { transform: translate(-50%,-50%) scale(0); opacity: 0; } }
+        .page-shrink-overlay .home-icon-anim { position: absolute; font-size: 2.5rem; opacity: 0; animation: homeIconPop 0.4s 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards; }
+        @keyframes homeIconPop { 0% { transform: translate(-50%,-50%) scale(0); opacity: 0; } 100% { transform: translate(-50%,-50%) scale(1); opacity: 1; } }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>文昌 旅行规划</h1>
+        <p class="subtitle">椰林里的航天城 - 海南文昌深度游</p>
+        <div class="travel-dates">2026年5月1日 - 5月5日</div>
+        <div class="start-point">🏠 出发点：文昌市区·清澜</div>
+    </header>
+
+    <div class="container">
+        <section class="glass-card">
+            <h2 class="section-title">预算明细</h2>
+            <div class="budget-panel">
+                <div class="budget-item glass-card-sm">
+                    <div class="icon">🎫</div>
+                    <div class="label">门票</div>
+                    <div class="amount">¥380</div>
+                </div>
+                <div class="budget-item glass-card-sm">
+                    <div class="icon">🍜</div>
+                    <div class="label">餐饮</div>
+                    <div class="amount">¥1200</div>
+                </div>
+                <div class="budget-item glass-card-sm">
+                    <div class="icon">🚗</div>
+                    <div class="label">交通</div>
+                    <div class="amount">¥600</div>
+                </div>
+                <div class="budget-item glass-card-sm">
+                    <div class="icon">🎮</div>
+                    <div class="label">娱乐</div>
+                    <div class="amount">¥350</div>
+                </div>
+            </div>
+            <div class="budget-total">
+                <div class="label">预计总花费</div>
+                <div class="amount">¥2530</div>
+            </div>
+        </section>
+
+        <section class="glass-card">
+            <h2 class="section-title">行程地图</h2>
+            <div class="map-container">
+                <div id="map"></div>
+                <div class="map-legend" id="mapLegend">
+                    <div class="legend-item" data-day="home"><span class="legend-dot home"></span><span>出发点</span></div>
+                    <div class="legend-item active" data-day="1" onclick="filterMapDay(1)"><span class="legend-dot day1"></span><span>Day1</span></div>
+                    <div class="legend-item active" data-day="2" onclick="filterMapDay(2)"><span class="legend-dot day2"></span><span>Day2</span></div>
+                    <div class="legend-item active" data-day="3" onclick="filterMapDay(3)"><span class="legend-dot day3"></span><span>Day3</span></div>
+                    <div class="legend-item active" data-day="4" onclick="filterMapDay(4)"><span class="legend-dot day4"></span><span>Day4</span></div>
+                    <div class="legend-item active" data-day="5" onclick="filterMapDay(5)"><span class="legend-dot day5"></span><span>Day5</span></div>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2 class="section-title">每日行程</h2>
+
+            <!-- Day 1: 龙楼航天·山海奇观 -->
+            <div class="glass-card day-card" data-day="1">
+                <div class="day-header">
+                    <div>
+                        <div class="day-number">Day 1</div>
+                        <div class="day-date">2026年5月1日 周五</div>
+                    </div>
+                    <div class="day-weather"><span>⛅</span><span>多云 25-31°C</span></div>
+                </div>
+                <div class="route-info">
+                    <div class="route-header" onclick="toggleRouteDetail(this)">
+                        <div>
+                            <div class="route-title">🏠 出发路线 <span class="route-arrow">▶</span></div>
+                            <div class="route-summary">清澜 → 铜鼓岭（约40分钟）建议：自驾/打车</div>
+                        </div>
+                    </div>
+                    <div class="route-detail">
+                        <div class="route-step">
+                            <div class="route-step-icon">🚗</div>
+                            <div class="route-step-content">
+                                <div class="route-step-title">自驾/打车至铜鼓岭</div>
+                                <div class="route-step-desc">从清澜出发，走S316省道向东北方向，经龙楼镇到铜鼓岭景区，车程约40分钟。建议租车自驾，文昌景点分散，租车最方便。</div>
+                            </div>
+                        </div>
+                        <div class="weather-tip">
+                            <div class="weather-tip-icon">☀️</div>
+                            <div class="weather-tip-content">
+                                <div class="weather-tip-title">天气建议</div>
+                                <div class="weather-tip-desc">今日多云（25-31°C），气温较高湿度大，务必做好防晒，携带充足饮用水。建议早出发避开午间高温。</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="spot-card">
+                    <div class="spot-time"><span class="time">09:00</span><span class="duration">2.5小时</span></div>
+                    <img class="spot-image" src="images/tonggul/1.jpg" alt="铜鼓岭" onerror="this.src='https://picsum.photos/140/100?tonggul'">
+                    <div class="spot-info">
+                        <div class="spot-name">⛰️ 铜鼓岭</div>
+                        <div class="spot-address">📍 文昌市龙楼镇铜鼓岭景区</div>
+                        <div class="spot-desc">"琼东第一峰"，登顶俯瞰月亮湾绝美弧线海岸，观海长廊拍照超出片。门票50元+观光车40元</div>
+                    </div>
+                    <div class="spot-carousel" data-spot="tonggul" data-current="0">
+                        <div class="carousel-track">
+                            <div class="carousel-slide active" data-index="0"><img src="images/tonggul/1.jpg" alt="铜鼓岭 1" loading="lazy"></div>
+                            <div class="carousel-slide next" data-index="1"><img src="images/tonggul/2.jpg" alt="铜鼓岭 2" loading="lazy"></div>
+                            <div class="carousel-slide far-next" data-index="2"><img src="images/tonggul/3.jpg" alt="铜鼓岭 3" loading="lazy"></div>
+                            <div class="carousel-slide hidden" data-index="3"><img src="images/tonggul/4.jpg" alt="铜鼓岭 4" loading="lazy"></div>
+                            <div class="carousel-slide far-prev" data-index="4"><img src="images/tonggul/5.jpg" alt="铜鼓岭 5" loading="lazy"></div>
+                            <div class="carousel-slide prev" data-index="5"><img src="images/tonggul/6.jpg" alt="铜鼓岭 6" loading="lazy"></div>
+                        </div>
+                        <div class="carousel-counter">1 / 6</div>
+                    </div>
+                </div>
+
+                <div class="transport-tag">🚗 自驾 · 约10分钟</div>
+
+                <div class="spot-card">
+                    <div class="spot-time"><span class="time">12:00</span><span class="duration">2小时</span></div>
+                    <img class="spot-image" src="images/shitoug/1.jpg" alt="石头公园" onerror="this.src='https://picsum.photos/140/100?shitoug'">
+                    <div class="spot-info">
+                        <div class="spot-name">🪨 石头公园</div>
+                        <div class="spot-address">📍 文昌市龙楼镇铜鼓岭山脚</div>
+                        <div class="spot-desc">海蚀地貌奇观，巨石林立海浪拍岸，《西游记》石猴出世取景地，免费开放。注意礁石湿滑穿防滑鞋</div>
+                    </div>
+                    <div class="spot-carousel" data-spot="shitoug" data-current="0">
+                        <div class="carousel-track">
+                            <div class="carousel-slide active" data-index="0"><img src="images/shitoug/1.jpg" alt="石头公园 1" loading="lazy"></div>
+                            <div class="carousel-slide next" data-index="1"><img src="images/shitoug/2.jpg" alt="石头公园 2" loading="lazy"></div>
+                            <div class="carousel-slide far-next" data-index="2"><img src="images/shitoug/3.jpg" alt="石头公园 3" loading="lazy"></div>
+                            <div class="carousel-slide hidden" data-index="3"><img src="images/shitoug/4.jpg" alt="石头公园 4" loading="lazy"></div>
+                            <div class="carousel-slide far-prev" data-index="4"><img src="images/shitoug/5.jpg" alt="石头公园 5" loading="lazy"></div>
+                            <div class="carousel-slide prev" data-index="5"><img src="images/shitoug/6.jpg" alt="石头公园 6" loading="lazy"></div>
+                        </div>
+                        <div class="carousel-counter">1 / 6</div>
+                    </div>
+                </div>
+
+                <div class="transport-tag">🚗 自驾 · 约5分钟</div>
+
+                <div class="mini-spot">
+                    <div class="mini-icon">🍗</div>
+                    <div class="mini-info">
+                        <div class="mini-name">符记正宗文昌鸡老店</div>
+                        <div class="mini-desc">龙楼镇上的地道文昌鸡老字号，后院自养农家鸡，白切蘸沙姜汁，皮脆肉嫩，半只仅65元</div>
+                        <span class="mini-tag">📍 龙楼镇文铜路79号</span>
+                        <span class="mini-tag">人均 ¥60</span>
+                        <span class="mini-tag">本地老字号</span>
+                    </div>
+                </div>
+
+                <div class="transport-tag">🚗 自驾 · 约5分钟</div>
+
+                <div class="spot-card">
+                    <div class="spot-time"><span class="time">15:00</span><span class="duration">2小时</span></div>
+                    <img class="spot-image" src="images/hangtianzx/1.jpg" alt="航天发射中心" onerror="this.src='https://picsum.photos/140/100?hangtianzx'">
+                    <div class="spot-info">
+                        <div class="spot-name">🚀 文昌航天科普中心</div>
+                        <div class="spot-address">📍 文昌市龙楼镇航天大道</div>
+                        <div class="spot-desc">中国首个滨海航天发射基地，参观火箭模型、VR模拟发射体验，航天主题科普。成人120元</div>
+                        <div class="reservation-alert">
+                            <span class="alert-icon">预约</span>
+                            <span>需提前在公众号预约门票</span>
+                        </div>
+                    </div>
+                    <div class="spot-carousel" data-spot="hangtianzx" data-current="0">
+                        <div class="carousel-track">
+                            <div class="carousel-slide active" data-index="0"><img src="images/hangtianzx/1.jpg" alt="航天科普中心 1" loading="lazy"></div>
+                            <div class="carousel-slide next" data-index="1"><img src="images/hangtianzx/2.jpg" alt="航天科普中心 2" loading="lazy"></div>
+                            <div class="carousel-slide far-next" data-index="2"><img src="images/hangtianzx/3.jpg" alt="航天科普中心 3" loading="lazy"></div>
+                            <div class="carousel-slide hidden" data-index="3"><img src="images/hangtianzx/4.jpg" alt="航天科普中心 4" loading="lazy"></div>
+                            <div class="carousel-slide far-prev" data-index="4"><img src="images/hangtianzx/5.jpg" alt="航天科普中心 5" loading="lazy"></div>
+                            <div class="carousel-slide prev" data-index="5"><img src="images/hangtianzx/6.jpg" alt="航天科普中心 6" loading="lazy"></div>
+                        </div>
+                        <div class="carousel-counter">1 / 6</div>
+                    </div>
+                </div>
+
+                <div class="transport-tag">🚗 自驾 · 约15分钟</div>
+                <div class="entertainment-spot">
+                    <div class="ent-icon">🏖️</div>
+                    <div class="ent-info">
+                        <div class="ent-name">淇水湾海滩 · 落日沙滩漫步</div>
+                        <div class="ent-desc">龙楼镇最美沙滩之一，柔软细腻的白沙滩，人少安静。傍晚踏浪看日落，感受热带海岛的浪漫</div>
+                        <div class="ent-meta">
+                            <span class="ent-tag">🕐 17:30-19:00</span>
+                            <span class="ent-tag">📍 龙楼镇淇水湾</span>
+                            <span class="ent-price">💰 免费</span>
+                            <span class="ent-tag">🌅 日落绝佳</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="meal-section">
+                    <div class="meal-title">🍽️ 餐饮推荐</div>
+                    <div class="meal-group">
+                        <div class="meal-group-title breakfast">☀️ 早餐 · 建议9:00前</div>
+                        <div class="meal-item">
+                            <div class="meal-info">
+                                <div class="meal-name">龙楼镇老爸茶早餐</div>
+                                <div class="meal-desc">海南传统老爸茶，配大包、虾饺、煎堆，慢悠悠吃顿地道早茶再出发</div>
+                                <div class="meal-address">📍 龙楼镇龙兴街</div>
+                            </div>
+                            <div class="meal-price">人均 ¥15</div>
+                        </div>
+                    </div>
+                    <div class="meal-group">
+                        <div class="meal-group-title lunch">🌞 午餐 · 建议12:00-13:00</div>
+                        <div class="meal-item">
+                            <div class="meal-info">
+                                <div class="meal-name">符记正宗文昌鸡老店</div>
+                                <div class="meal-desc">文昌鸡必吃之选，白切文昌鸡皮爽肉滑，蘸海南辣酱绝配。到文昌第一餐就吃最正宗的</div>
+                                <div class="meal-address">📍 龙楼镇文铜路79号</div>
+                            </div>
+                            <div class="meal-price">人均 ¥60</div>
+                        </div>
+                    </div>
+                    <div class="meal-group">
+                        <div class="meal-group-title dinner">🌙 晚餐 · 建议18:00-19:00</div>
+                        <div class="meal-item">
+                            <div class="meal-info">
+                                <div class="meal-name">龙福生美食城（海鲜）</div>
+                                <div class="meal-desc">龙楼镇人气海鲜大排档，新鲜龙楼四宝（海胆、鲍鱼、海白、龙虾），看完日落吃海鲜</div>
+                                <div class="meal-address">📍 龙楼镇</div>
+                            </div>
+                            <div class="meal-price">人均 ¥80</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Day 2: 椰林海风·椰乡文化 -->
+            <div class="glass-card day-card" data-day="2">
+                <div class="day-header">
+                    <div>
+                        <div class="day-number">Day 2</div>
+                        <div class="day-date">2026年5月2日 周六</div>
+                    </div>
+                    <div class="day-weather"><span>🌦️</span><span>多云有阵雨 25-31°C</span></div>
+                </div>
+                <div class="route-info">
+                    <div class="route-header" onclick="toggleRouteDetail(this)">
+                        <div>
+                            <div class="route-title">🏠 出发路线 <span class="route-arrow">▶</span></div>
+                            <div class="route-summary">清澜 → 东郊椰林（约20分钟）建议：自驾</div>
+                        </div>
+                    </div>
+                    <div class="route-detail">
+                        <div class="route-step">
+                            <div class="route-step-icon">🚗</div>
+                            <div class="route-step-content">
+                                <div class="route-step-title">自驾至东郊椰林</div>
+                                <div class="route-step-desc">从清澜出发沿椰林路向东南方向行驶约20分钟即达东郊椰林风景区。</div>
+                            </div>
+                        </div>
+                        <div class="weather-tip">
+                            <div class="weather-tip-icon">🌦️</div>
+                            <div class="weather-tip-content">
+                                <div class="weather-tip-title">天气建议</div>
+                                <div class="weather-tip-desc">今日可能有阵雨（25-31°C），携带雨具。椰林中有遮荫，下雨也别有风味。如雨势大可调整为先去室内的椰子大观园。</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="spot-card">
+                    <div class="spot-time"><span class="time">09:00</span><span class="duration">3小时</span></div>
+                    <img class="spot-image" src="images/dongjiaoyelin/1.jpg" alt="东郊椰林" onerror="this.src='https://picsum.photos/140/100?dongjiaoyelin'">
+                    <div class="spot-info">
+                        <div class="spot-name">🌴 东郊椰林</div>
+                        <div class="spot-address">📍 文昌市东郊镇椰林路</div>
+                        <div class="spot-desc">海南最大椰林景区，27.8平方公里椰林，海南一半椰子产自这里。骑行椰林小道、海滩踏浪、吊床躺平，椰子3-5元一个超便宜</div>
+                    </div>
+                    <div class="spot-carousel" data-spot="dongjiaoyelin" data-current="0">
+                        <div class="carousel-track">
+                            <div class="carousel-slide far-prev" data-index="0"><img src="images/dongjiaoyelin/1.jpg" alt="东郊椰林 1" loading="lazy"></div>
+                            <div class="carousel-slide prev" data-index="1"><img src="images/dongjiaoyelin/2.jpg" alt="东郊椰林 2" loading="lazy"></div>
+                            <div class="carousel-slide active" data-index="2"><img src="images/dongjiaoyelin/3.jpg" alt="东郊椰林 3" loading="lazy"></div>
+                            <div class="carousel-slide next" data-index="3"><img src="images/dongjiaoyelin/4.jpg" alt="东郊椰林 4" loading="lazy"></div>
+                            <div class="carousel-slide far-next" data-index="4"><img src="images/dongjiaoyelin/5.jpg" alt="东郊椰林 5" loading="lazy"></div>
+                            <div class="carousel-slide hidden" data-index="5"><img src="images/dongjiaoyelin/6.jpg" alt="东郊椰林 6" loading="lazy"></div>
+                        </div>
+                        <div class="carousel-counter">1 / 6</div>
+                    </div>
+                </div>
+
+                <div class="transport-tag">🚗 自驾 · 约5分钟</div>
+
+                <div class="mini-spot">
+                    <div class="mini-icon">☕</div>
+                    <div class="mini-info">
+                        <div class="mini-name">裕源中西茶园（老爸茶）</div>
+                        <div class="mini-desc">地图上找不到的隐藏老爸茶馆，当地人休闲聊天的地方，传统小吃品种多样，上午去最好，11点后基本卖完</div>
+                        <span class="mini-tag">📍 东郊椰林村子内</span>
+                        <span class="mini-tag">人均 ¥15</span>
+                        <span class="mini-tag">本地隐藏</span>
+                    </div>
+                </div>
+
+                <div class="transport-tag">🚗 自驾 · 约10分钟</div>
+
+                <div class="spot-card">
+                    <div class="spot-time"><span class="time">12:30</span><span class="duration">2小时</span></div>
+                    <img class="spot-image" src="images/yezidgy/1.jpg" alt="椰子大观园" onerror="this.src='https://picsum.photos/140/100?yezidgy'">
+                    <div class="spot-info">
+                        <div class="spot-name">🥥 椰子大观园</div>
+                        <div class="spot-address">📍 文昌市文城镇文清大道502号</div>
+                        <div class="spot-desc">4A景区，千种椰树秘境，椰子迷宫、萌宠互动、椰子文化科普。成人50元</div>
+                    </div>
+                    <div class="spot-carousel" data-spot="yezidgy" data-current="0">
+                        <div class="carousel-track">
+                            <div class="carousel-slide active" data-index="0"><img src="images/yezidgy/1.jpg" alt="椰子大观园 1" loading="lazy"></div>
+                            <div class="carousel-slide next" data-index="1"><img src="images/yezidgy/2.jpg" alt="椰子大观园 2" loading="lazy"></div>
+                            <div class="carousel-slide far-next" data-index="2"><img src="images/yezidgy/3.jpg" alt="椰子大观园 3" loading="lazy"></div>
+                            <div class="carousel-slide hidden" data-index="3"><img src="images/yezidgy/4.jpg" alt="椰子大观园 4" loading="lazy"></div>
+                            <div class="carousel-slide far-prev" data-index="4"><img src="images/yezidgy/5.jpg" alt="椰子大观园 5" loading="lazy"></div>
+                            <div class="carousel-slide prev" data-index="5"><img src="images/yezidgy/6.jpg" alt="椰子大观园 6" loading="lazy"></div>
+                        </div>
+                        <div class="carousel-counter">1 / 6</div>
+                    </div>
+                </div>
+
+                <div class="transport-tag">🚗 自驾 · 约15分钟</div>
+
+                <div class="spot-card">
+                    <div class="spot-time"><span class="time">15:00</span><span class="duration">2.5小时</span></div>
+                    <img class="spot-image" src="images/gaolong/1.jpg" alt="高隆湾" onerror="this.src='https://picsum.photos/140/100?gaolong'">
+                    <div class="spot-info">
+                        <div class="spot-name">🏖️ 高隆湾</div>
+                        <div class="spot-address">📍 文昌市清澜镇高隆湾</div>
+                        <div class="spot-desc">海南著名天然浴场，沙滩宽阔平坦干净，海水暖和海浪轻微，亲子戏水好去处，免费开放</div>
+                    </div>
+                    <div class="spot-carousel" data-spot="gaolong" data-current="0">
+                        <div class="carousel-track">
+                            <div class="carousel-slide active" data-index="0"><img src="images/gaolong/1.jpg" alt="高隆湾 1" loading="lazy"></div>
+                            <div class="carousel-slide next" data-index="1"><img src="images/gaolong/2.jpg" alt="高隆湾 2" loading="lazy"></div>
+                            <div class="carousel-slide far-next" data-index="2"><img src="images/gaolong/3.jpg" alt="高隆湾 3" loading="lazy"></div>
+                            <div class="carousel-slide hidden" data-index="3"><img src="images/gaolong/4.jpg" alt="高隆湾 4" loading="lazy"></div>
+                            <div class="carousel-slide far-prev" data-index="4"><img src="images/gaolong/5.jpg" alt="高隆湾 5" loading="lazy"></div>
+                            <div class="carousel-slide prev" data-index="5"><img src="images/gaolong/6.jpg" alt="高隆湾 6" loading="lazy"></div>
+                        </div>
+                        <div class="carousel-counter">1 / 6</div>
+                    </div>
+                </div>
+
+                <div class="transport-tag">🚗 自驾 · 约10分钟</div>
+                <div class="entertainment-spot">
+                    <div class="ent-icon">🍺</div>
+                    <div class="ent-info">
+                        <div class="ent-name">清澜港夜市 · 海鲜烧烤夜宵</div>
+                        <div class="ent-desc">文昌最热闹的夜市，海鲜烧烤云集，吹海风逛吃。现点现做的海胆、龙虾、海白等龙楼四宝，配上清补凉收尾</div>
+                        <div class="ent-meta">
+                            <span class="ent-tag">🕐 18:30-22:00</span>
+                            <span class="ent-tag">📍 清澜港</span>
+                            <span class="ent-price">💰 人均¥80</span>
+                            <span class="ent-tag">🌃 吹海风逛吃</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="meal-section">
+                    <div class="meal-title">🍽️ 餐饮推荐</div>
+                    <div class="meal-group">
+                        <div class="meal-group-title breakfast">☀️ 早餐 · 可以睡到9:30</div>
+                        <div class="meal-item">
+                            <div class="meal-info">
+                                <div class="meal-name">裕源中西茶园（老爸茶）</div>
+                                <div class="meal-desc">东郊椰林村子里的老爸茶店，炒粉、猪脚饭、各式糕点，椰林中吃早茶超惬意</div>
+                                <div class="meal-address">📍 东郊椰林村子内</div>
+                            </div>
+                            <div class="meal-price">人均 ¥15</div>
+                        </div>
+                    </div>
+                    <div class="meal-group">
+                        <div class="meal-group-title lunch">🌞 午餐 · 建议12:30-13:30</div>
+                        <div class="meal-item">
+                            <div class="meal-info">
+                                <div class="meal-name">瑞丰椰子鸡</div>
+                                <div class="meal-desc">新鲜椰青水打底，文昌鸡入锅涮煮，汤鲜肉嫩，椰香四溢。来海南必吃椰子鸡</div>
+                                <div class="meal-address">📍 东郊椰林风景区</div>
+                            </div>
+                            <div class="meal-price">人均 ¥70</div>
+                        </div>
+                    </div>
+                    <div class="meal-group">
+                        <div class="meal-group-title dinner">🌙 晚餐 · 建议18:30</div>
+                        <div class="meal-item">
+                            <div class="meal-info">
+                                <div class="meal-name">清澜港夜市海鲜烧烤</div>
+                                <div class="meal-desc">夜市现选现烤，海胆、生蚝、海白、烤龙虾应有尽有，配一碗清补凉收尾。吹着海风逛吃是文昌夜生活标配</div>
+                                <div class="meal-address">📍 清澜港夜市</div>
+                            </div>
+                            <div class="meal-price">人均 ¥80</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Day 3: 侨乡人文·南洋风情 -->
+            <div class="glass-card day-card" data-day="3">
+                <div class="day-header">
+                    <div>
+                        <div class="day-number">Day 3</div>
+                        <div class="day-date">2026年5月3日 周日</div>
+                    </div>
+                    <div class="day-weather"><span>🌦️</span><span>多云有阵雨 26-31°C</span></div>
+                </div>
+                <div class="route-info">
+                    <div class="route-header" onclick="toggleRouteDetail(this)">
+                        <div>
+                            <div class="route-title">🏠 出发路线 <span class="route-arrow">▶</span></div>
+                            <div class="route-summary">清澜 → 文昌孔庙（约10分钟）建议：自驾/打车</div>
+                        </div>
+                    </div>
+                    <div class="route-detail">
+                        <div class="route-step">
+                            <div class="route-step-icon">🚗</div>
+                            <div class="route-step-content">
+                                <div class="route-step-title">自驾至文昌孔庙</div>
+                                <div class="route-step-desc">从清澜出发至文城镇文昌孔庙，车程约10分钟。今天的行程集中在文城镇市区，可以步行+打车穿梭。</div>
+                            </div>
+                        </div>
+                        <div class="weather-tip">
+                            <div class="weather-tip-icon">🌦️</div>
+                            <div class="weather-tip-content">
+                                <div class="weather-tip-title">天气建议</div>
+                                <div class="weather-tip-desc">今日多云有阵雨（26-31°C），携带雨具。孔庙和老街均在市区，距离近方便避雨。下午去宋氏祖居需提前查看天气。</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="spot-card">
+                    <div class="spot-time"><span class="time">09:00</span><span class="duration">1.5小时</span></div>
+                    <img class="spot-image" src="images/wenchang_kongmiao/1.jpg" alt="文昌孔庙" onerror="this.src='https://picsum.photos/140/100?wenchang_kongmiao'">
+                    <div class="spot-info">
+                        <div class="spot-name">🏛️ 文昌孔庙</div>
+                        <div class="spot-address">📍 文城镇文东里20号</div>
+                        <div class="spot-desc">海南省保存最完整的古建筑群，"海南第一庙"。红墙青瓦绿树，安静庄严，人文气息浓厚</div>
+                    </div>
+                    <div class="spot-carousel" data-spot="wenchang_kongmiao" data-current="0">
+                        <div class="carousel-track">
+                            <div class="carousel-slide active" data-index="0"><img src="images/wenchang_kongmiao/1.jpg" alt="文昌孔庙 1" loading="lazy"></div>
+                            <div class="carousel-slide next" data-index="1"><img src="images/wenchang_kongmiao/2.jpg" alt="文昌孔庙 2" loading="lazy"></div>
+                            <div class="carousel-slide far-next" data-index="2"><img src="images/wenchang_kongmiao/3.jpg" alt="文昌孔庙 3" loading="lazy"></div>
+                            <div class="carousel-slide hidden" data-index="3"><img src="images/wenchang_kongmiao/4.jpg" alt="文昌孔庙 4" loading="lazy"></div>
+                            <div class="carousel-slide far-prev" data-index="4"><img src="images/wenchang_kongmiao/5.jpg" alt="文昌孔庙 5" loading="lazy"></div>
+                            <div class="carousel-slide prev" data-index="5"><img src="images/wenchang_kongmiao/6.jpg" alt="文昌孔庙 6" loading="lazy"></div>
+                        </div>
+                        <div class="carousel-counter">1 / 6</div>
+                    </div>
+                </div>
+
+                <div class="transport-tag">🚶 步行 · 约10分钟</div>
+
+                <div class="spot-card">
+                    <div class="spot-time"><span class="time">11:00</span><span class="duration">2小时</span></div>
+                    <img class="spot-image" src="images/wennanlaojie/1.jpg" alt="文南老街" onerror="this.src='https://picsum.photos/140/100?wennanlaojie'">
+                    <div class="spot-info">
+                        <div class="spot-name">🏮 文南老街</div>
+                        <div class="spot-address">📍 文昌市文南路</div>
+                        <div class="spot-desc">海南第三大骑楼老街，兴建于1920年代，中西合璧南洋风格建筑。美食云集：文昌鸡、抱罗粉、清补凉</div>
+                    </div>
+                    <div class="spot-carousel" data-spot="wennanlaojie" data-current="0">
+                        <div class="carousel-track">
+                            <div class="carousel-slide active" data-index="0"><img src="images/wennanlaojie/1.jpg" alt="文南老街 1" loading="lazy"></div>
+                            <div class="carousel-slide next" data-index="1"><img src="images/wennanlaojie/2.jpg" alt="文南老街 2" loading="lazy"></div>
+                            <div class="carousel-slide far-next" data-index="2"><img src="images/wennanlaojie/3.jpg" alt="文南老街 3" loading="lazy"></div>
+                            <div class="carousel-slide hidden" data-index="3"><img src="images/wennanlaojie/4.jpg" alt="文南老街 4" loading="lazy"></div>
+                            <div class="carousel-slide far-prev" data-index="4"><img src="images/wennanlaojie/5.jpg" alt="文南老街 5" loading="lazy"></div>
+                            <div class="carousel-slide prev" data-index="5"><img src="images/wennanlaojie/6.jpg" alt="文南老街 6" loading="lazy"></div>
+                        </div>
+                        <div class="carousel-counter">1 / 6</div>
+                    </div>
+                </div>
+
+                <div class="transport-tag">🚶 步行 · 约5分钟</div>
+
+                <div class="mini-spot">
+                    <div class="mini-icon">☕</div>
+                    <div class="mini-info">
+                        <div class="mini-name">迈号咖啡文化产业园</div>
+                        <div class="mini-desc">南洋复古风咖啡馆，藤编座椅与吊灯，陈列百年华侨老物件。品尝文昌特有的利比里卡大粒种咖啡，果浆厚风味足</div>
+                        <span class="mini-tag">📍 文昌迈号镇</span>
+                        <span class="mini-tag">人均 ¥30</span>
+                        <span class="mini-tag">百年咖啡文化</span>
+                    </div>
+                </div>
+
+                <div class="transport-tag">🚗 自驾 · 约30分钟</div>
+
+                <div class="spot-card">
+                    <div class="spot-time"><span class="time">14:30</span><span class="duration">1.5小时</span></div>
+                    <img class="spot-image" src="images/songshizuju/1.jpg" alt="宋氏祖居" onerror="this.src='https://picsum.photos/140/100?songshizuju'">
+                    <div class="spot-info">
+                        <div class="spot-name">🏡 宋氏祖居</div>
+                        <div class="spot-address">📍 文昌市昌洒镇古路园村</div>
+                        <div class="spot-desc">宋庆龄家族祖居，庭院式古建筑，陈列珍贵历史照片和文物，门票15元</div>
+                    </div>
+                    <div class="spot-carousel" data-spot="songshizuju" data-current="0">
+                        <div class="carousel-track">
+                            <div class="carousel-slide active" data-index="0"><img src="images/songshizuju/1.jpg" alt="宋氏祖居 1" loading="lazy"></div>
+                            <div class="carousel-slide next" data-index="1"><img src="images/songshizuju/2.jpg" alt="宋氏祖居 2" loading="lazy"></div>
+                            <div class="carousel-slide far-next" data-index="2"><img src="images/songshizuju/3.jpg" alt="宋氏祖居 3" loading="lazy"></div>
+                            <div class="carousel-slide hidden" data-index="3"><img src="images/songshizuju/4.jpg" alt="宋氏祖居 4" loading="lazy"></div>
+                            <div class="carousel-slide far-prev" data-index="4"><img src="images/songshizuju/5.jpg" alt="宋氏祖居 5" loading="lazy"></div>
+                            <div class="carousel-slide prev" data-index="5"><img src="images/songshizuju/6.jpg" alt="宋氏祖居 6" loading="lazy"></div>
+                        </div>
+                        <div class="carousel-counter">1 / 6</div>
+                    </div>
+                </div>
+
+                <div class="transport-tag">🚗 自驾 · 约20分钟</div>
+
+                <div class="mini-spot">
+                    <div class="mini-icon">🍰</div>
+                    <div class="mini-info">
+                        <div class="mini-name">重兴斑兰农庄</div>
+                        <div class="mini-desc">椰林下的南洋风味农庄，品尝斑兰红茶和千层糕。斑兰是华侨从东南亚带回的"东方香草"，清香宜人</div>
+                        <span class="mini-tag">📍 重兴镇</span>
+                        <span class="mini-tag">人均 ¥35</span>
+                        <span class="mini-tag">南洋味道</span>
+                    </div>
+                </div>
+
+                <div class="transport-tag">🚗 自驾 · 约25分钟</div>
+                <div class="entertainment-spot">
+                    <div class="ent-icon">🌃</div>
+                    <div class="ent-info">
+                        <div class="ent-name">文南老街夜景 · 骑楼南洋夜色</div>
+                        <div class="ent-desc">夜幕下的骑楼灯笼映椰影，南洋风情拉满。漫步百年老街，品尝夜市小吃，感受文昌最地道的市井烟火气</div>
+                        <div class="ent-meta">
+                            <span class="ent-tag">🕐 19:00-21:00</span>
+                            <span class="ent-tag">📍 文南路</span>
+                            <span class="ent-price">💰 免费</span>
+                            <span class="ent-tag">🏮 南洋风情</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="meal-section">
+                    <div class="meal-title">🍽️ 餐饮推荐</div>
+                    <div class="meal-group">
+                        <div class="meal-group-title breakfast">☀️ 早餐 · 可以睡到9:00</div>
+                        <div class="meal-item">
+                            <div class="meal-info">
+                                <div class="meal-name">文南老街抱罗粉</div>
+                                <div class="meal-desc">海南四大名粉之一，汤清味鲜，粉条滑爽，加牛肉干和花生酱是标配吃法。早起一碗粉开启人文之旅</div>
+                                <div class="meal-address">📍 文南老街内</div>
+                            </div>
+                            <div class="meal-price">人均 ¥15</div>
+                        </div>
+                    </div>
+                    <div class="meal-group">
+                        <div class="meal-group-title lunch">🌞 午餐 · 建议12:00-13:00</div>
+                        <div class="meal-item">
+                            <div class="meal-info">
+                                <div class="meal-name">阿侬盐焗鸡</div>
+                                <div class="meal-desc">海南非遗盐焗鸡，整只鸡用粗海盐焗制，外皮金黄酥香，肉质鲜嫩多汁，配白米饭一绝</div>
+                                <div class="meal-address">📍 渔港路059号</div>
+                            </div>
+                            <div class="meal-price">人均 ¥40</div>
+                        </div>
+                    </div>
+                    <div class="meal-group">
+                        <div class="meal-group-title dinner">🌙 晚餐 · 建议19:00</div>
+                        <div class="meal-item">
+                            <div class="meal-info">
+                                <div class="meal-name">迈号咖啡+斑兰糕配海南粉</div>
+                                <div class="meal-desc">逛完文南老街夜景后来份轻食，品迈号利比里卡咖啡配重兴斑兰千层糕，再来碗海南腌粉做夜宵</div>
+                                <div class="meal-address">📍 迈号咖啡文化产业园 / 文南老街</div>
+                            </div>
+                            <div class="meal-price">人均 ¥35</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Day 4: 铺前古韵·玻璃海湾 -->
+            <div class="glass-card day-card" data-day="4">
+                <div class="day-header">
+                    <div>
+                        <div class="day-number">Day 4</div>
+                        <div class="day-date">2026年5月4日 周一</div>
+                    </div>
+                    <div class="day-weather"><span>⛅</span><span>多云 26-31°C</span></div>
+                </div>
+                <div class="route-info">
+                    <div class="route-header" onclick="toggleRouteDetail(this)">
+                        <div>
+                            <div class="route-title">🏠 出发路线 <span class="route-arrow">▶</span></div>
+                            <div class="route-summary">清澜 → 铺前古镇（约50分钟）建议：自驾</div>
+                        </div>
+                    </div>
+                    <div class="route-detail">
+                        <div class="route-step">
+                            <div class="route-step-icon">🚗</div>
+                            <div class="route-step-content">
+                                <div class="route-step-title">自驾至铺前古镇</div>
+                                <div class="route-step-desc">从清澜出发经海文大桥方向至铺前镇，车程约50分钟。铺前镇距海口很近，可走海文大桥。</div>
+                            </div>
+                        </div>
+                        <div class="weather-tip">
+                            <div class="weather-tip-icon">☀️</div>
+                            <div class="weather-tip-content">
+                                <div class="weather-tip-title">天气建议</div>
+                                <div class="weather-tip-desc">今日多云（26-31°C），天气不错适合户外。铺前古镇游览约2小时，下午去冯家湾玩水，注意防晒。</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="spot-card">
+                    <div class="spot-time"><span class="time">09:30</span><span class="duration">2小时</span></div>
+                    <img class="spot-image" src="images/puqianzhen/1.jpg" alt="铺前古镇" onerror="this.src='https://picsum.photos/140/100?puqianzhen'">
+                    <div class="spot-info">
+                        <div class="spot-name">🏘️ 铺前古镇</div>
+                        <div class="spot-address">📍 文昌市铺前镇</div>
+                        <div class="spot-desc">海南四大古镇之一，保留大量南洋骑楼建筑，比海口老街更淳朴。下午4点渔港有渔船回港，可买新鲜海鲜</div>
+                    </div>
+                    <div class="spot-carousel" data-spot="puqianzhen" data-current="0">
+                        <div class="carousel-track">
+                            <div class="carousel-slide active" data-index="0"><img src="images/puqianzhen/1.jpg" alt="铺前古镇 1" loading="lazy"></div>
+                            <div class="carousel-slide next" data-index="1"><img src="images/puqianzhen/2.jpg" alt="铺前古镇 2" loading="lazy"></div>
+                            <div class="carousel-slide far-next" data-index="2"><img src="images/puqianzhen/3.jpg" alt="铺前古镇 3" loading="lazy"></div>
+                            <div class="carousel-slide hidden" data-index="3"><img src="images/puqianzhen/4.jpg" alt="铺前古镇 4" loading="lazy"></div>
+                            <div class="carousel-slide far-prev" data-index="4"><img src="images/puqianzhen/5.jpg" alt="铺前古镇 5" loading="lazy"></div>
+                            <div class="carousel-slide prev" data-index="5"><img src="images/puqianzhen/6.jpg" alt="铺前古镇 6" loading="lazy"></div>
+                        </div>
+                        <div class="carousel-counter">1 / 6</div>
+                    </div>
+                </div>
+
+                <div class="transport-tag">🚶 步行 · 约5分钟</div>
+
+                <div class="mini-spot">
+                    <div class="mini-icon">🍜</div>
+                    <div class="mini-info">
+                        <div class="mini-name">铺前糟粕醋</div>
+                        <div class="mini-desc">铺前镇传统名小吃，糟粕醋发源地！酸辣开胃的醋汤配海鲜，曾上过《沸腾吧火锅》纪录片，来文昌必吃</div>
+                        <span class="mini-tag">📍 铺前老街小摊</span>
+                        <span class="mini-tag">人均 ¥25</span>
+                        <span class="mini-tag">非遗美食</span>
+                    </div>
+                </div>
+
+                <div class="transport-tag">🚗 自驾 · 约40分钟</div>
+
+                <div class="spot-card">
+                    <div class="spot-time"><span class="time">13:00</span><span class="duration">2.5小时</span></div>
+                    <img class="spot-image" src="images/fengjiawan/1.jpg" alt="冯家湾" onerror="this.src='https://picsum.photos/140/100?fengjiawan'">
+                    <div class="spot-info">
+                        <div class="spot-name">🌊 冯家湾</div>
+                        <div class="spot-address">📍 文昌市会文镇冯家湾</div>
+                        <div class="spot-desc">"玻璃海"小众秘境，人少景美，清澈海水能见度极高。森系出片圣地，网红打卡同款机位</div>
+                    </div>
+                    <div class="spot-carousel" data-spot="fengjiawan" data-current="0">
+                        <div class="carousel-track">
+                            <div class="carousel-slide active" data-index="0"><img src="images/fengjiawan/1.jpg" alt="冯家湾 1" loading="lazy"></div>
+                            <div class="carousel-slide next" data-index="1"><img src="images/fengjiawan/2.jpg" alt="冯家湾 2" loading="lazy"></div>
+                            <div class="carousel-slide far-next" data-index="2"><img src="images/fengjiawan/3.jpg" alt="冯家湾 3" loading="lazy"></div>
+                            <div class="carousel-slide hidden" data-index="3"><img src="images/fengjiawan/4.jpg" alt="冯家湾 4" loading="lazy"></div>
+                            <div class="carousel-slide far-prev" data-index="4"><img src="images/fengjiawan/5.jpg" alt="冯家湾 5" loading="lazy"></div>
+                            <div class="carousel-slide prev" data-index="5"><img src="images/fengjiawan/6.jpg" alt="冯家湾 6" loading="lazy"></div>
+                        </div>
+                        <div class="carousel-counter">1 / 6</div>
+                    </div>
+                </div>
+
+                <div class="transport-tag">🚗 自驾 · 约15分钟</div>
+
+                <div class="spot-card">
+                    <div class="spot-time"><span class="time">16:00</span><span class="duration">1.5小时</span></div>
+                    <img class="spot-image" src="images/chunguangyezi/1.jpg" alt="春光椰子王国" onerror="this.src='https://picsum.photos/140/100?chunguangyezi'">
+                    <div class="spot-info">
+                        <div class="spot-name">🥥 春光椰子王国</div>
+                        <div class="spot-address">📍 文昌市龙楼镇S316</div>
+                        <div class="spot-desc">椰子文化主题园区，参观椰子加工生产线，DIY椰子手工艺品，品尝各种椰子美食，免费开放</div>
+                    </div>
+                    <div class="spot-carousel" data-spot="chunguangyezi" data-current="0">
+                        <div class="carousel-track">
+                            <div class="carousel-slide active" data-index="0"><img src="images/chunguangyezi/1.jpg" alt="春光椰子王国 1" loading="lazy"></div>
+                            <div class="carousel-slide next" data-index="1"><img src="images/chunguangyezi/2.jpg" alt="春光椰子王国 2" loading="lazy"></div>
+                            <div class="carousel-slide far-next" data-index="2"><img src="images/chunguangyezi/3.jpg" alt="春光椰子王国 3" loading="lazy"></div>
+                            <div class="carousel-slide hidden" data-index="3"><img src="images/chunguangyezi/4.jpg" alt="春光椰子王国 4" loading="lazy"></div>
+                            <div class="carousel-slide far-prev" data-index="4"><img src="images/chunguangyezi/5.jpg" alt="春光椰子王国 5" loading="lazy"></div>
+                            <div class="carousel-slide prev" data-index="5"><img src="images/chunguangyezi/6.jpg" alt="春光椰子王国 6" loading="lazy"></div>
+                        </div>
+                        <div class="carousel-counter">1 / 6</div>
+                    </div>
+                </div>
+
+                <div class="transport-tag">🚗 自驾 · 约30分钟</div>
+                <div class="entertainment-spot">
+                    <div class="ent-icon">🎣</div>
+                    <div class="ent-info">
+                        <div class="ent-name">环球码头海鲜市场 · 淘海鲜大餐</div>
+                        <div class="ent-desc">文昌最大海鲜市场，自选新鲜海鲜拿去餐厅加工。生蚝2元/个、海胆8元/个、小石斑20元/条，比三亚便宜一半</div>
+                        <div class="ent-meta">
+                            <span class="ent-tag">🕐 17:00-20:00</span>
+                            <span class="ent-tag">📍 清澜环球码头</span>
+                            <span class="ent-price">💰 人均¥100</span>
+                            <span class="ent-tag">🦐 超值海鲜</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="meal-section">
+                    <div class="meal-title">🍽️ 餐饮推荐</div>
+                    <div class="meal-group">
+                        <div class="meal-group-title breakfast">☀️ 早餐 · 可以睡到9:30</div>
+                        <div class="meal-item">
+                            <div class="meal-info">
+                                <div class="meal-name">铺前糟粕醋早餐</div>
+                                <div class="meal-desc">铺前非遗美食，酸辣开胃的糟粕醋配海鲜杂烩，上过《沸腾吧火锅》。早上来一碗酸爽醒神，适合前一晚吃撑的胃</div>
+                                <div class="meal-address">📍 铺前老街小摊</div>
+                            </div>
+                            <div class="meal-price">人均 ¥25</div>
+                        </div>
+                    </div>
+                    <div class="meal-group">
+                        <div class="meal-group-title lunch">🌞 午餐 · 建议12:30</div>
+                        <div class="meal-item">
+                            <div class="meal-info">
+                                <div class="meal-name">铺前马鲛鱼饭</div>
+                                <div class="meal-desc">铺前渔港特产马鲛鱼，煎到两面金黄，外焦里嫩，配白米饭和一碟酱油辣椒，渔民风味满分</div>
+                                <div class="meal-address">📍 铺前镇渔港路</div>
+                            </div>
+                            <div class="meal-price">人均 ¥45</div>
+                        </div>
+                    </div>
+                    <div class="meal-group">
+                        <div class="meal-group-title dinner">🌙 晚餐 · 建议17:30</div>
+                        <div class="meal-item">
+                            <div class="meal-info">
+                                <div class="meal-name">环球码头海鲜加工</div>
+                                <div class="meal-desc">文昌最大海鲜市场自选海鲜+餐厅加工，生蚝2元/个、海胆8元/个、小石斑20元/条，比三亚便宜一半。今天重头戏</div>
+                                <div class="meal-address">📍 清澜环球码头</div>
+                            </div>
+                            <div class="meal-price">人均 ¥100</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Day 5: 航天城·椰奶鸡·悠闲收尾 -->
+            <div class="glass-card day-card" data-day="5">
+                <div class="day-header">
+                    <div>
+                        <div class="day-number">Day 5</div>
+                        <div class="day-date">2026年5月5日 周二</div>
+                    </div>
+                    <div class="day-weather"><span>⛅</span><span>多云 25-31°C</span></div>
+                </div>
+                <div class="route-info">
+                    <div class="route-header" onclick="toggleRouteDetail(this)">
+                        <div>
+                            <div class="route-title">🏠 出发路线 <span class="route-arrow">▶</span></div>
+                            <div class="route-summary">清澜 → 符家宅（约15分钟）建议：自驾</div>
+                        </div>
+                    </div>
+                    <div class="route-detail">
+                        <div class="route-step">
+                            <div class="route-step-icon">🚗</div>
+                            <div class="route-step-content">
+                                <div class="route-step-title">自驾至符家宅</div>
+                                <div class="route-step-desc">最后一天轻松行程，上午逛文昌市区周边小众景点，下午悠闲收尾准备返程。</div>
+                            </div>
+                        </div>
+                        <div class="weather-tip">
+                            <div class="weather-tip-icon">☀️</div>
+                            <div class="weather-tip-content">
+                                <div class="weather-tip-title">天气建议</div>
+                                <div class="weather-tip-desc">今日多云（25-31°C），最后一天天气不错。上午行程较轻松，下午可以去码头老爸茶，悠闲告别文昌。</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="spot-card">
+                    <div class="spot-time"><span class="time">09:30</span><span class="duration">1小时</span></div>
+                    <img class="spot-image" src="images/gaolong/1.jpg" alt="高隆湾晨跑" onerror="this.src='https://picsum.photos/140/100?gaolong2'">
+                    <div class="spot-info">
+                        <div class="spot-name">🌅 高隆湾晨间漫步</div>
+                        <div class="spot-address">📍 文昌市清澜镇高隆湾</div>
+                        <div class="spot-desc">最后一天清晨去高隆湾散步，看海上日出，在沙滩上留下文昌的最后记忆</div>
+                    </div>
+                    <div class="spot-carousel" data-spot="gaolong" data-current="0">
+                        <div class="carousel-track">
+                            <div class="carousel-slide active" data-index="0"><img src="images/gaolong/1.jpg" alt="高隆湾 1" loading="lazy"></div>
+                            <div class="carousel-slide next" data-index="1"><img src="images/gaolong/2.jpg" alt="高隆湾 2" loading="lazy"></div>
+                            <div class="carousel-slide far-next" data-index="2"><img src="images/gaolong/3.jpg" alt="高隆湾 3" loading="lazy"></div>
+                            <div class="carousel-slide hidden" data-index="3"><img src="images/gaolong/4.jpg" alt="高隆湾 4" loading="lazy"></div>
+                            <div class="carousel-slide far-prev" data-index="4"><img src="images/gaolong/5.jpg" alt="高隆湾 5" loading="lazy"></div>
+                            <div class="carousel-slide prev" data-index="5"><img src="images/gaolong/6.jpg" alt="高隆湾 6" loading="lazy"></div>
+                        </div>
+                        <div class="carousel-counter">1 / 6</div>
+                    </div>
+                </div>
+
+                <div class="transport-tag">🚗 自驾 · 约20分钟</div>
+
+                <div class="mini-spot">
+                    <div class="mini-icon">🏘️</div>
+                    <div class="mini-info">
+                        <div class="mini-name">符家宅</div>
+                        <div class="mini-desc">南洋风格民居院落，中国传统+伊斯兰元素建筑。已无人居住，层叠通透的拱门超有氛围感，穿越百年的废墟美学</div>
+                        <span class="mini-tag">📍 文昌市头苑镇</span>
+                        <span class="mini-tag">免费开放</span>
+                        <span class="mini-tag">百年建筑</span>
+                    </div>
+                </div>
+
+                <div class="transport-tag">🚗 自驾 · 约15分钟</div>
+
+                <div class="spot-card">
+                    <div class="spot-time"><span class="time">11:30</span><span class="duration">2小时</span></div>
+                    <img class="spot-image" src="images/dongjiaoyelin/1.jpg" alt="椰奶鸡午餐" onerror="this.src='https://picsum.photos/140/100?yelinrest'">
+                    <div class="spot-info">
+                        <div class="spot-name">🍲 恒味椰奶鸡</div>
+                        <div class="spot-address">📍 东郊椰林风景区</div>
+                        <div class="spot-desc">告别文昌的必吃一餐！用椰奶煮文昌鸡，鸡肉嫩滑Q弹，汤汁椰香浓郁，不蘸酱料已令人回味无穷</div>
+                    </div>
+                    <div class="spot-carousel" data-spot="dongjiaoyelin" data-current="0">
+                        <div class="carousel-track">
+                            <div class="carousel-slide far-prev" data-index="0"><img src="images/dongjiaoyelin/1.jpg" alt="东郊椰林 1" loading="lazy"></div>
+                            <div class="carousel-slide prev" data-index="1"><img src="images/dongjiaoyelin/2.jpg" alt="东郊椰林 2" loading="lazy"></div>
+                            <div class="carousel-slide active" data-index="2"><img src="images/dongjiaoyelin/3.jpg" alt="东郊椰林 3" loading="lazy"></div>
+                            <div class="carousel-slide next" data-index="3"><img src="images/dongjiaoyelin/4.jpg" alt="东郊椰林 4" loading="lazy"></div>
+                            <div class="carousel-slide far-next" data-index="4"><img src="images/dongjiaoyelin/5.jpg" alt="东郊椰林 5" loading="lazy"></div>
+                            <div class="carousel-slide hidden" data-index="5"><img src="images/dongjiaoyelin/6.jpg" alt="东郊椰林 6" loading="lazy"></div>
+                        </div>
+                        <div class="carousel-counter">1 / 6</div>
+                    </div>
+                </div>
+
+                <div class="transport-tag">🚗 自驾 · 约15分钟</div>
+
+                <div class="mini-spot">
+                    <div class="mini-icon">☕</div>
+                    <div class="mini-info">
+                        <div class="mini-name">码头老爸茶</div>
+                        <div class="mini-desc">清澜港旁的老爸茶馆，体验海南人最地道的慢生活方式。一壶茶配各式小点心，坐看渔船进出港口</div>
+                        <span class="mini-tag">📍 清澜港附近</span>
+                        <span class="mini-tag">人均 ¥20</span>
+                        <span class="mini-tag">海南慢生活</span>
+                    </div>
+                </div>
+
+                <div class="transport-tag">🚗 自驾 · 约10分钟</div>
+                <div class="entertainment-spot">
+                    <div class="ent-icon">🛍️</div>
+                    <div class="ent-info">
+                        <div class="ent-name">椰子伴手礼采购 · 满载而归</div>
+                        <div class="ent-desc">春光食品、南国食品等文昌本地椰子特产店，椰子糖、椰子糕、椰子粉、椰子油应有尽有，价格比其他地方便宜</div>
+                        <div class="ent-meta">
+                            <span class="ent-tag">🕐 15:00-16:30</span>
+                            <span class="ent-tag">📍 文城镇</span>
+                            <span class="ent-price">💰 ¥100-200</span>
+                            <span class="ent-tag">🎁 伴手礼</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="meal-section">
+                    <div class="meal-title">🍽️ 餐饮推荐</div>
+                    <div class="meal-group">
+                        <div class="meal-group-title breakfast">☀️ 早餐 · 最后一天睡到自然醒</div>
+                        <div class="meal-item">
+                            <div class="meal-info">
+                                <div class="meal-name">码头老爸茶</div>
+                                <div class="meal-desc">清澜港附近的老爸茶店，海南人最地道的慢生活方式。大包、糕点、奶茶，坐看渔船进出，悠闲告别文昌</div>
+                                <div class="meal-address">📍 清澜港附近</div>
+                            </div>
+                            <div class="meal-price">人均 ¥20</div>
+                        </div>
+                    </div>
+                    <div class="meal-group">
+                        <div class="meal-group-title lunch">🌞 午餐 · 建议11:30（告别餐）</div>
+                        <div class="meal-item">
+                            <div class="meal-info">
+                                <div class="meal-name">恒味椰奶鸡</div>
+                                <div class="meal-desc">东郊椰林招牌菜，鲜椰奶炖文昌鸡，奶白浓汤配嫩滑鸡肉。告别文昌的必吃一餐，吃完心满意足回程</div>
+                                <div class="meal-address">📍 东郊椰林风景区</div>
+                            </div>
+                            <div class="meal-price">人均 ¥70</div>
+                        </div>
+                    </div>
+                    <div class="meal-group">
+                        <div class="meal-group-title dinner">🌙 下午茶/路上吃 · 返程前</div>
+                        <div class="meal-item">
+                            <div class="meal-info">
+                                <div class="meal-name">椰青冻+清补凉</div>
+                                <div class="meal-desc">买几个椰青冻和清补凉路上喝，海南特色甜品。文南老街还能带走椰子糖、椰子脆片等伴手礼</div>
+                                <div class="meal-address">📍 文南老街 / 文城镇超市</div>
+                            </div>
+                            <div class="meal-price">人均 ¥20</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <div class="grid-2">
+            <section class="glass-card">
+                <h2 class="section-title">预约提醒清单</h2>
+                <ul class="reservation-list">
+                    <li>
+                        <div>
+                            <div class="reservation-spot">🚀 文昌航天科普中心</div>
+                            <div class="reservation-channel">预约渠道：文昌航天科普中心公众号 | 提前预约</div>
+                        </div>
+                        <a href="#" class="reservation-link">去预约 →</a>
+                    </li>
+                    <li>
+                        <div>
+                            <div class="reservation-spot">⛰️ 铜鼓岭景区</div>
+                            <div class="reservation-channel">预约渠道：现场购票/美团预订 | 节假日建议提前</div>
+                        </div>
+                        <a href="https://www.meituan.com/" class="reservation-link" target="_blank">去预约 →</a>
+                    </li>
+                </ul>
+            </section>
+
+            <section class="glass-card">
+                <h2 class="section-title">避坑指南</h2>
+                <ul class="tips-list">
+                    <li>文昌景点分散，强烈建议租车自驾，市内租车约150-200元/天</li>
+                    <li>五月是文昌雨季初期，随身携带雨具，每日可能有阵雨</li>
+                    <li>石头公园礁石湿滑务必穿防滑鞋，切勿在浪大时靠近海边</li>
+                    <li>航天发射中心提前预约门票，五一期间可能限流</li>
+                    <li>海鲜消费提前问价，环球码头自选海鲜时注意称重</li>
+                    <li>文昌鸡认准本地老字号（符记、力哥等），避免景区高价店</li>
+                    <li>椰子大观园下午3点后椰子加工体验可能结束，建议上午去</li>
+                    <li>铺前糟粕醋可要求减辣减盐，外地游客可能不习惯酸辣口味</li>
+                    <li>五月气温25-31°C，注意防晒防暑，随身携带饮用水</li>
+                    <li>东郊椰林椰子3-5元/个，景区外买更便宜，不要被高价忽悠</li>
+                </ul>
+            </section>
+        </div>
+    </div>
+
+    <div class="chat-panel" id="chatPanel">
+        <div class="chat-panel-header">
+            <h3>🤖 旅行伴游助手</h3>
+            <button class="chat-panel-close" onclick="toggleChatPanel()">✕</button>
+        </div>
+        <div class="chat-messages" id="chatMessages">
+            <div class="chat-message">
+                <div class="chat-avatar">AI</div>
+                <div class="chat-bubble">
+                    您好！我是您的文昌旅行伴游助手，有关于文昌旅行的任何问题都可以问我哦~比如"文昌鸡哪家最正宗？"、"铜鼓岭怎么去？"、"下雨天去哪玩？"
+                </div>
+            </div>
+        </div>
+        <div class="chat-input-wrap">
+            <input type="text" class="chat-input" id="chatInput" placeholder="问我任何关于这次旅行的问题...">
+            <button class="chat-send" onclick="sendMessage()">发送</button>
+        </div>
+    </div>
+
+    <div class="float-buttons">
+        <button class="float-btn float-btn-top" id="btnBackTop" onclick="scrollToTop()" title="回到顶部">⬆</button>
+        <button class="float-btn float-btn-theme" id="btnTheme" onclick="toggleTheme()" title="切换主题">🌙</button>
+        <button class="float-btn float-btn-home" onclick="goHomeWithTransition(event)" title="返回首页">🏠</button>
+        <button class="float-btn float-btn-chat" id="btnChat" onclick="toggleChatPanel()" title="旅行助手">🤖</button>
+    </div>
+
+    <footer class="footer">
+        <p>数据来源于小红书真实用户游记 | 由 AI 智能规划生成</p>
+        <p style="margin-top: 8px;">🏠 出发点：文昌清澜 | 行程特点：自驾深度游 | 椰林+航天+南洋侨乡 | 轻松不赶路</p>
+    </footer>
+
+    <div class="lightbox-overlay" id="lightbox">
+        <button class="lightbox-close" onclick="closeLightbox()">×</button>
+        <button class="lightbox-nav lightbox-prev" onclick="lightboxNav(-1)">‹</button>
+        <button class="lightbox-nav lightbox-next" onclick="lightboxNav(1)">›</button>
+        <div class="lightbox-img-wrap">
+            <img id="lightboxImg" src="" alt="">
+        </div>
+        <div class="lightbox-title" id="lightboxTitle"></div>
+        <div class="lightbox-dots" id="lightboxDots"></div>
+    </div>
+
+    <script>
+        // ======= 登录状态检查 =======
+        (function checkAuth() {
+            const isLoggedIn = sessionStorage.getItem('isLoggedIn');
+            if (isLoggedIn !== 'true') {
+                window.location.href = '../index.html';
+            }
+        })();
+
+        const spotImages = {
+            'tonggul': { name: '铜鼓岭', count: 6 },
+            'shitoug': { name: '石头公园', count: 6 },
+            'hangtianzx': { name: '航天科普中心', count: 6 },
+            'dongjiaoyelin': { name: '东郊椰林', count: 6 },
+            'yezidgy': { name: '椰子大观园', count: 6 },
+            'gaolong': { name: '高隆湾', count: 6 },
+            'wenchang_kongmiao': { name: '文昌孔庙', count: 6 },
+            'wennanlaojie': { name: '文南老街', count: 6 },
+            'songshizuju': { name: '宋氏祖居', count: 6 },
+            'puqianzhen': { name: '铺前古镇', count: 6 },
+            'fengjiawan': { name: '冯家湾', count: 6 },
+            'chunguangyezi': { name: '春光椰子王国', count: 6 },
+        };
+
+        function initCarousels() {
+            document.querySelectorAll('.spot-carousel').forEach(carousel => {
+                const key = carousel.dataset.spot;
+                if (!key || !spotImages[key]) return;
+                // Bind click on slides for lightbox
+                carousel.querySelectorAll('.carousel-slide').forEach((slide, i) => {
+                    slide.addEventListener('click', () => openLightbox(key, i));
+                });
+                // Add onerror fallback to images
+                carousel.querySelectorAll('.carousel-slide img').forEach((img, i) => {
+                    img.onerror = function() { this.onerror = null; this.src = `https://picsum.photos/180/130?random=${key}_${i}`; };
+                });
+                // Drag/swipe support
+                let startX = 0, dragging = false;
+                carousel.addEventListener('mousedown', e => { startX = e.clientX; dragging = true; e.preventDefault(); });
+                carousel.addEventListener('mousemove', e => { if (dragging) e.preventDefault(); });
+                carousel.addEventListener('mouseup', e => {
+                    if (!dragging) return; dragging = false;
+                    const diff = e.clientX - startX;
+                    if (Math.abs(diff) > 30) moveCarousel(carousel, diff < 0 ? 1 : -1);
+                });
+                carousel.addEventListener('mouseleave', () => { dragging = false; });
+                carousel.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, { passive: true });
+                carousel.addEventListener('touchend', e => {
+                    const diff = e.changedTouches[0].clientX - startX;
+                    if (Math.abs(diff) > 30) moveCarousel(carousel, diff < 0 ? 1 : -1);
+                });
+                carousel.addEventListener('wheel', e => { e.preventDefault(); moveCarousel(carousel, e.deltaY > 0 ? 1 : -1); }, { passive: false });
+                // Auto rotate
+                setInterval(() => { if (!document.hidden) moveCarousel(carousel, 1); }, 4000 + Math.random() * 2000);
+            });
+        }
+
+        function moveCarousel(carousel, direction) {
+            const key = carousel.dataset.spot;
+            const count = spotImages[key].count;
+            let current = parseInt(carousel.dataset.current);
+            current = (current + direction + count) % count;
+            carousel.dataset.current = current;
+            updateCarouselSlides(carousel);
+        }
+
+        function updateCarouselSlides(carousel) {
+            const slides = carousel.querySelectorAll('.carousel-slide');
+            const total = slides.length;
+            const current = parseInt(carousel.dataset.current);
+            const counter = carousel.querySelector('.carousel-counter');
+            if (counter) counter.textContent = `${current + 1} / ${total}`;
+            slides.forEach((slide, i) => {
+                slide.className = 'carousel-slide';
+                const diff = i - current;
+                const wrappedDiff = ((diff + total + Math.floor(total/2)) % total) - Math.floor(total/2);
+                if (wrappedDiff === 0) slide.classList.add('active');
+                else if (wrappedDiff === -1) slide.classList.add('prev');
+                else if (wrappedDiff === 1) slide.classList.add('next');
+                else if (wrappedDiff === -2) slide.classList.add('far-prev');
+                else if (wrappedDiff === 2) slide.classList.add('far-next');
+                else slide.classList.add('hidden');
+            });
+        }
+
+        let lbSpot = '', lbIndex = 0;
+        function openLightbox(spot, index) {
+            lbSpot = spot; lbIndex = index;
+            const overlay = document.getElementById('lightbox');
+            const img = document.getElementById('lightboxImg');
+            const title = document.getElementById('lightboxTitle');
+            const dots = document.getElementById('lightboxDots');
+            img.src = `images/${spot}/${index + 1}.jpg`;
+            title.textContent = `${spotImages[spot].name} (${index + 1}/${spotImages[spot].count})`;
+            dots.innerHTML = '';
+            for (let i = 0; i < spotImages[spot].count; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'lightbox-dot' + (i === index ? ' active' : '');
+                dot.onclick = () => { lbIndex = i; updateLightbox(); };
+                dots.appendChild(dot);
+            }
+            overlay.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+        function closeLightbox() { document.getElementById('lightbox').classList.remove('show'); document.body.style.overflow = ''; }
+        function lightboxNav(dir) { const count = spotImages[lbSpot].count; lbIndex = (lbIndex + dir + count) % count; updateLightbox(); }
+        function updateLightbox() {
+            document.getElementById('lightboxImg').src = `images/${lbSpot}/${lbIndex + 1}.jpg`;
+            document.getElementById('lightboxTitle').textContent = `${spotImages[lbSpot].name} (${lbIndex + 1}/${spotImages[lbSpot].count})`;
+            document.querySelectorAll('.lightbox-dot').forEach((d, i) => { d.className = 'lightbox-dot' + (i === lbIndex ? ' active' : ''); });
+        }
+        document.addEventListener('keydown', e => {
+            const lb = document.getElementById('lightbox');
+            if (!lb.classList.contains('show')) return;
+            if (e.key === 'Escape') closeLightbox();
+            if (e.key === 'ArrowLeft') lightboxNav(-1);
+            if (e.key === 'ArrowRight') lightboxNav(1);
+        });
+        document.getElementById('lightbox').addEventListener('click', e => { if (e.target === document.getElementById('lightbox')) closeLightbox(); });
+
+        const dayColors = { 1: '#FF6B6B', 2: '#4ECDC4', 3: '#FFE66D', 4: '#95E1D3', 5: '#DDA0DD' };
+        const homeSpot = { name: "清澜", lng: 110.7983, lat: 19.5258 };
+
+        const daySpots = {
+            1: [
+                { name: "铜鼓岭", lng: 110.9450, lat: 19.6850, imgKey: "tonggul" },
+                { name: "石头公园", lng: 110.9400, lat: 19.6750, imgKey: "shitoug" },
+                { name: "符记文昌鸡", lng: 110.9430, lat: 19.6580, mini: true },
+                { name: "航天科普中心", lng: 110.9510, lat: 19.6150, imgKey: "hangtianzx" },
+                { name: "淇水湾海滩", lng: 110.9480, lat: 19.6300, entertainment: true }
+            ],
+            2: [
+                { name: "东郊椰林", lng: 110.8600, lat: 19.5050, imgKey: "dongjiaoyelin" },
+                { name: "裕源茶园", lng: 110.8580, lat: 19.5030, mini: true },
+                { name: "椰子大观园", lng: 110.7800, lat: 19.5400, imgKey: "yezidgy" },
+                { name: "高隆湾", lng: 110.8050, lat: 19.5100, imgKey: "gaolong" },
+                { name: "清澜港夜市", lng: 110.8000, lat: 19.5200, entertainment: true }
+            ],
+            3: [
+                { name: "文昌孔庙", lng: 110.7530, lat: 19.5380, imgKey: "wenchang_kongmiao" },
+                { name: "文南老街", lng: 110.7500, lat: 19.5350, imgKey: "wennanlaojie" },
+                { name: "迈号咖啡", lng: 110.6800, lat: 19.5600, mini: true },
+                { name: "宋氏祖居", lng: 110.8500, lat: 19.6200, imgKey: "songshizuju" },
+                { name: "斑兰农庄", lng: 110.7200, lat: 19.4500, mini: true },
+                { name: "文南老街夜景", lng: 110.7500, lat: 19.5350, entertainment: true }
+            ],
+            4: [
+                { name: "铺前古镇", lng: 110.5700, lat: 19.8400, imgKey: "puqianzhen" },
+                { name: "铺前糟粕醋", lng: 110.5710, lat: 19.8390, mini: true },
+                { name: "冯家湾", lng: 110.7100, lat: 19.3600, imgKey: "fengjiawan" },
+                { name: "春光椰子王国", lng: 110.9350, lat: 19.6100, imgKey: "chunguangyezi" },
+                { name: "环球码头", lng: 110.8050, lat: 19.5150, entertainment: true }
+            ],
+            5: [
+                { name: "高隆湾晨漫", lng: 110.8050, lat: 19.5100, imgKey: "gaolong" },
+                { name: "符家宅", lng: 110.7700, lat: 19.5600, mini: true },
+                { name: "恒味椰奶鸡", lng: 110.8580, lat: 19.5040, imgKey: "dongjiaoyelin" },
+                { name: "码头老爸茶", lng: 110.7990, lat: 19.5210, mini: true },
+                { name: "椰子伴手礼", lng: 110.7500, lat: 19.5350, entertainment: true }
+            ]
+        };
+
+        const dayTransports = {
+            1: [
+                { icon: '🚗', label: '自驾', duration: '10分钟' },
+                { icon: '🚗', label: '自驾', duration: '5分钟' },
+                { icon: '🚗', label: '自驾', duration: '5分钟' },
+                { icon: '🚗', label: '自驾', duration: '15分钟' }
+            ],
+            2: [
+                { icon: '🚗', label: '自驾', duration: '5分钟' },
+                { icon: '🚗', label: '自驾', duration: '10分钟' },
+                { icon: '🚗', label: '自驾', duration: '15分钟' },
+                { icon: '🚗', label: '自驾', duration: '10分钟' }
+            ],
+            3: [
+                { icon: '🚶', label: '步行', duration: '10分钟' },
+                { icon: '🚶', label: '步行', duration: '5分钟' },
+                { icon: '🚗', label: '自驾', duration: '30分钟' },
+                { icon: '🚗', label: '自驾', duration: '20分钟' },
+                { icon: '🚗', label: '自驾', duration: '25分钟' }
+            ],
+            4: [
+                { icon: '🚶', label: '步行', duration: '5分钟' },
+                { icon: '🚗', label: '自驾', duration: '40分钟' },
+                { icon: '🚗', label: '自驾', duration: '15分钟' },
+                { icon: '🚗', label: '自驾', duration: '30分钟' }
+            ],
+            5: [
+                { icon: '🚗', label: '自驾', duration: '20分钟' },
+                { icon: '🚗', label: '自驾', duration: '15分钟' },
+                { icon: '🚗', label: '自驾', duration: '15分钟' },
+                { icon: '🚗', label: '自驾', duration: '10分钟' }
+            ]
+        };
+
+        let mapInstance = null;
+        const dayOverlays = {};
+        let activeDay = null;
+
+        function initMap() {
+            mapInstance = new AMap.Map('map', {
+                zoom: 10,
+                center: [110.80, 19.55],
+                mapStyle: 'amap://styles/darkblue'
+            });
+            const homeMarker = new AMap.Marker({
+                position: [homeSpot.lng, homeSpot.lat],
+                title: homeSpot.name,
+                content: `<div style="background: linear-gradient(135deg, #4CAF50, #81C784); color: white; padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: bold; white-space: nowrap; box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4); border: 2px solid white;">🏠 ${homeSpot.name}</div>`
+            });
+            mapInstance.add(homeMarker);
+
+            Object.keys(daySpots).forEach(day => {
+                const spots = daySpots[day];
+                const color = dayColors[day];
+                const transports = dayTransports[day] || [];
+                dayOverlays[day] = [];
+                spots.forEach((spot, idx) => {
+                    const imgKey = spot.imgKey;
+                    const imgSrc = imgKey ? `images/${imgKey}/1.jpg` : '';
+                    const isMini = spot.mini;
+                    const isEnt = spot.entertainment;
+                    let markerContent;
+                    if (isEnt) {
+                        markerContent = `<div class="map-spot-marker" style="position:relative;"><div style="background: linear-gradient(135deg, #9b59b6, #3498db); color: white; padding: 4px 10px; border-radius: 12px; font-size: 10px; font-weight: bold; white-space: nowrap; box-shadow: 0 3px 10px rgba(155,89,182,0.4); border: 1.5px solid white;">🎮 ${spot.name}</div></div>`;
+                    } else if (isMini) {
+                        markerContent = `<div class="map-spot-marker" style="position:relative;"><div style="background: rgba(212,175,55,0.85); color: #1a1a2e; padding: 3px 8px; border-radius: 10px; font-size: 9px; font-weight: bold; white-space: nowrap; box-shadow: 0 2px 6px rgba(0,0,0,0.3); border: 1.5px solid white;">⭐ ${spot.name}</div></div>`;
+                    } else {
+                        markerContent = `<div class="map-spot-marker" style="position:relative;"><div class="map-spot-tooltip">${imgSrc ? `<img src="${imgSrc}" alt="${spot.name}">` : ''}<div class="tooltip-name">${spot.name}</div></div><div style="background: linear-gradient(135deg, ${color}, ${color}dd); color: ${day == 3 ? '#333' : 'white'}; padding: 6px 12px; border-radius: 16px; font-size: 11px; font-weight: bold; white-space: nowrap; box-shadow: 0 3px 10px ${color}66; border: 2px solid white;">D${day}-${idx + 1} ${spot.name}</div></div>`;
+                    }
+                    const marker = new AMap.Marker({ position: [spot.lng, spot.lat], anchor: 'bottom-center', content: markerContent });
+                    mapInstance.add(marker);
+                    dayOverlays[day].push(marker);
+                });
+                const startLine = new AMap.Polyline({
+                    path: [[homeSpot.lng, homeSpot.lat], [spots[0].lng, spots[0].lat]],
+                    strokeColor: color, strokeWeight: 3, strokeOpacity: 0.6, strokeStyle: 'dashed', lineJoin: 'round', lineCap: 'round'
+                });
+                mapInstance.add(startLine);
+                dayOverlays[day].push(startLine);
+                if (spots.length > 1) {
+                    const dayLine = new AMap.Polyline({
+                        path: spots.map(s => [s.lng, s.lat]),
+                        strokeColor: color, strokeWeight: 5, strokeOpacity: 0.9, strokeStyle: 'solid', lineJoin: 'round', lineCap: 'round', showDir: true
+                    });
+                    mapInstance.add(dayLine);
+                    dayOverlays[day].push(dayLine);
+                    for (let i = 0; i < spots.length - 1; i++) {
+                        const t = transports[i];
+                        if (!t) continue;
+                        const midLng = (spots[i].lng + spots[i + 1].lng) / 2;
+                        const midLat = (spots[i].lat + spots[i + 1].lat) / 2;
+                        const transportMarker = new AMap.Marker({
+                            position: [midLng, midLat], anchor: 'center',
+                            content: `<div class="map-transport-marker"><span class="map-transport-icon">${t.icon}</span><span class="map-transport-duration">${t.duration}</span></div>`
+                        });
+                        mapInstance.add(transportMarker);
+                        dayOverlays[day].push(transportMarker);
+                    }
+                }
+            });
+            mapInstance.setFitView(null, false, [50, 50, 50, 50]);
+        }
+
+        function filterMapDay(day) {
+            if (activeDay === day) {
+                activeDay = null;
+                Object.keys(dayOverlays).forEach(d => { dayOverlays[d].forEach(o => o.show()); });
+                document.querySelectorAll('.legend-item[data-day]').forEach(el => { if (el.dataset.day !== 'home') el.classList.add('active'); });
+                mapInstance.setFitView(null, false, [50, 50, 50, 50]);
+            } else {
+                activeDay = day;
+                Object.keys(dayOverlays).forEach(d => { dayOverlays[d].forEach(o => { if (parseInt(d) === day) o.show(); else o.hide(); }); });
+                document.querySelectorAll('.legend-item[data-day]').forEach(el => { if (el.dataset.day === 'home') return; if (parseInt(el.dataset.day) === day) el.classList.add('active'); else el.classList.remove('active'); });
+                mapInstance.setFitView(dayOverlays[day], false, [60, 60, 60, 60]);
+            }
+        }
+
+        function toggleRouteDetail(element) {
+            const detail = element.nextElementSibling;
+            const arrow = element.querySelector('.route-arrow');
+            if (detail.style.display === 'none' || detail.style.display === '') { detail.style.display = 'block'; arrow.textContent = '▼'; }
+            else { detail.style.display = 'none'; arrow.textContent = '▶'; }
+        }
+
+        const DEEPSEEK_API_KEY = 'sk-7d1850dab54445e3ac304d0ebddc961d';
+        const DEEPSEEK_API_URL = 'https://api.deepseek.com/chat/completions';
+        const tripContext = `
+你是文昌旅行伴游助手，负责回答用户关于本次文昌旅行的问题。
+
+【行程信息】
+- 出发点：文昌市区·清澜
+- 旅行日期：2026年5月1日-5日（共5天）
+- 预算：门票¥380 + 餐饮¥1200 + 交通¥600 + 娱乐¥350 = 总计¥2530
+
+【每日行程安排】
+Day 1 (5月1日): 清澜→铜鼓岭→石头公园→符记文昌鸡（午餐）→航天科普中心→淇水湾海滩看日落
+Day 2 (5月2日): 清澜→东郊椰林→裕源老爸茶→椰子大观园→高隆湾→清澜港夜市
+Day 3 (5月3日): 清澜→文昌孔庙→文南老街→迈号咖啡→宋氏祖居→斑兰农庄→文南老街夜景
+Day 4 (5月4日): 清澜→铺前古镇→糟粕醋→冯家湾玻璃海→春光椰子王国→环球码头海鲜
+Day 5 (5月5日): 高隆湾晨漫→符家宅→恒味椰奶鸡→码头老爸茶→采购伴手礼→返程
+
+【美食推荐】
+文昌鸡（白切/椰奶鸡）、糟粕醋（铺前古镇）、抱罗粉、椰子鸡、清补凉、椰青凍、锦山牛肉干、海鲜（龙楼四宝）
+
+【天气预报】
+5月初文昌气温25-31°C，湿度80%+，可能有阵雨，注意防晒防暑，携带雨具。
+
+请根据以上信息，用简洁友好的语气回答用户问题。`;
+
+        let messageHistory = [{ role: 'system', content: tripContext }];
+
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const messages = document.getElementById('chatMessages');
+            const sendBtn = document.querySelector('.chat-send');
+            const text = input.value.trim();
+            if (!text) return;
+            messages.innerHTML += `<div class="chat-message user"><div class="chat-avatar">我</div><div class="chat-bubble">${escapeHtml(text)}</div></div>`;
+            input.value = '';
+            messages.scrollTop = messages.scrollHeight;
+            messageHistory.push({ role: 'user', content: text });
+            const loadingId = 'loading-' + Date.now();
+            messages.innerHTML += `<div class="chat-message" id="${loadingId}"><div class="chat-avatar">AI</div><div class="chat-bubble"><span class="loading-dots">思考中<span>.</span><span>.</span><span>.</span></span></div></div>`;
+            messages.scrollTop = messages.scrollHeight;
+            sendBtn.disabled = true;
+            sendBtn.textContent = '发送中...';
+            try {
+                const response = await fetch(DEEPSEEK_API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${DEEPSEEK_API_KEY}` },
+                    body: JSON.stringify({ model: 'deepseek-chat', messages: messageHistory, temperature: 0.7, max_tokens: 1000 })
+                });
+                const loadingEl = document.getElementById(loadingId);
+                if (!response.ok) throw new Error(`API error: ${response.status}`);
+                const data = await response.json();
+                const reply = data.choices[0].message.content;
+                messageHistory.push({ role: 'assistant', content: reply });
+                if (loadingEl) loadingEl.querySelector('.chat-bubble').innerHTML = formatReply(reply);
+            } catch (error) {
+                console.error('API Error:', error);
+                const loadingEl = document.getElementById(loadingId);
+                let fallbackReply = getFallbackReply(text);
+                if (loadingEl) loadingEl.querySelector('.chat-bubble').innerHTML = `${formatReply(fallbackReply)}<br><small style="color: rgba(255,255,255,0.4);">(离线模式)</small>`;
+            } finally {
+                sendBtn.disabled = false;
+                sendBtn.textContent = '发送';
+                messages.scrollTop = messages.scrollHeight;
+            }
+        }
+
+        function escapeHtml(text) { const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
+        function formatReply(text) {
+            return text
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                .replace(/^### (.+)$/gm, '<strong style="font-size:0.95rem;color:#d4af37;">$1</strong>')
+                .replace(/^## (.+)$/gm, '<strong style="font-size:1rem;color:#d4af37;">$1</strong>')
+                .replace(/^# (.+)$/gm, '<strong style="font-size:1.05rem;color:#d4af37;">$1</strong>')
+                .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.+?)\*/g, '<em>$1</em>')
+                .replace(/`(.+?)`/g, '<code style="background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:4px;font-size:0.85em;">$1</code>')
+                .replace(/^\d+\.\s+(.+)$/gm, '<div style="padding-left:1.2em;text-indent:-1.2em;margin:2px 0;">$&</div>')
+                .replace(/^[-*]\s+(.+)$/gm, '<div style="padding-left:1em;margin:2px 0;">• $1</div>')
+                .replace(/\n{2,}/g, '<br><br>')
+                .replace(/\n/g, '<br>');
+        }
+
+        function getFallbackReply(text) {
+            if (text.includes("美食") || text.includes("吃") || text.includes("鸡")) {
+                return "文昌必吃美食推荐：\n1. 文昌鸡（白切蘸沙姜汁，推荐符记老店）\n2. 糟粕醋（铺前古镇小摊最正宗）\n3. 抱罗粉（文南老街内）\n4. 椰奶鸡（恒味椰奶鸡店）\n5. 清补凉（夜市必备解暑甜品）\n6. 海鲜（环球码头自选加工，超便宜）";
+            } else if (text.includes("交通") || text.includes("怎么去") || text.includes("租车")) {
+                return "文昌景点分散，强烈建议租车自驾（约150-200元/天）。从海口美兰机场坐高铁到文昌站约20分钟，票价21元。文昌站到市区可打车，约20-30元。";
+            } else if (text.includes("天气") || text.includes("穿")) {
+                return "5月文昌气温25-31°C，湿度大。建议穿短袖短裤+薄防晒衣，随身携带雨具（可能有阵雨）。注意防晒，SPF30+防晒霜必备！";
+            } else if (text.includes("下雨") || text.includes("雨天")) {
+                return "雨天推荐：椰子大观园（室内展馆多）、文昌孔庙（有遮荫）、春光椰子王国（室内参观）、文南老街骑楼（避雨逛吃两不误）";
+            }
+            return "抱歉，当前AI服务暂时不可用。您可以问我关于行程、美食、交通、天气等问题！";
+        }
+
+        document.getElementById('chatInput').addEventListener('keypress', (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
+
+        function toggleChatPanel() {
+            const panel = document.getElementById('chatPanel');
+            panel.classList.toggle('open');
+            if (panel.classList.contains('open')) setTimeout(() => document.getElementById('chatInput').focus(), 350);
+        }
+
+        function scrollToTop() { window.scrollTo({ top: 0, behavior: 'smooth' }); }
+        window.addEventListener('scroll', () => {
+            const btn = document.getElementById('btnBackTop');
+            if (window.scrollY > 400) btn.classList.add('visible'); else btn.classList.remove('visible');
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const body = document.body;
+            const btn = document.getElementById('btnTheme');
+            body.classList.toggle('light-theme');
+            const isLight = body.classList.contains('light-theme');
+            btn.textContent = isLight ? '🌞' : '🌙';
+            localStorage.setItem('theme', isLight ? 'light' : 'dark');
+        }
+        (function initTheme() {
+            const saved = localStorage.getItem('theme');
+            if (saved === 'light') {
+                document.body.classList.add('light-theme');
+                document.getElementById('btnTheme').textContent = '🌞';
+            }
+        })();
+
+        document.addEventListener('click', (e) => {
+            const panel = document.getElementById('chatPanel');
+            const chatBtn = document.getElementById('btnChat');
+            if (panel.classList.contains('open') && !panel.contains(e.target) && !chatBtn.contains(e.target)) panel.classList.remove('open');
+        });
+
+        // 返回首页缩小特效
+        function goHomeWithTransition(e) {
+            e.preventDefault();
+            const x = e.clientX || window.innerWidth - 48;
+            const y = e.clientY || window.innerHeight - 80;
+            const maxDist = Math.max(
+                Math.hypot(x, y),
+                Math.hypot(window.innerWidth - x, y),
+                Math.hypot(x, window.innerHeight - y),
+                Math.hypot(window.innerWidth - x, window.innerHeight - y)
+            );
+            const diameter = maxDist * 2;
+
+            const overlay = document.createElement('div');
+            overlay.className = 'page-shrink-overlay';
+
+            const mask = document.createElement('div');
+            mask.className = 'shrink-mask';
+            mask.style.left = (x - maxDist) + 'px';
+            mask.style.top = (y - maxDist) + 'px';
+            mask.style.width = diameter + 'px';
+            mask.style.height = diameter + 'px';
+            overlay.appendChild(mask);
+
+            for (let i = 0; i < 2; i++) {
+                const ring = document.createElement('div');
+                ring.className = 'shrink-flash';
+                ring.style.left = x + 'px';
+                ring.style.top = y + 'px';
+                ring.style.width = '80px';
+                ring.style.height = '80px';
+                ring.style.animationDelay = (i * 0.15) + 's';
+                overlay.appendChild(ring);
+            }
+
+            const icon = document.createElement('div');
+            icon.className = 'home-icon-anim';
+            icon.textContent = '🏠';
+            icon.style.left = x + 'px';
+            icon.style.top = y + 'px';
+            overlay.appendChild(icon);
+
+            document.body.appendChild(overlay);
+
+            setTimeout(() => { window.location.href = '../index.html'; }, 900);
+        }
+
+        window.onload = function() {
+            try { initMap(); } catch(e) { console.warn('Map init failed:', e); }
+            try { initCarousels(); } catch(e) { console.warn('Carousel init failed:', e); }
+        };
+    </script>
+</body>
+</html>

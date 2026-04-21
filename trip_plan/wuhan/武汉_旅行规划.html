@@ -1,0 +1,3341 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>武汉 旅行规划</title>
+    <!-- 高德地图 JS API 2.0 -->
+    <script src="https://webapi.amap.com/maps?v=2.0&key=2bdadf69fd2e2dbc18de423ddacd04f6"></script>
+    <style>
+        :root {
+            --glass-bg: rgba(20, 20, 30, 0.85);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            --accent-gold: #d4af37;
+            --accent-purple: #9b59b6;
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.7);
+            --gradient-1: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            --gradient-gold: linear-gradient(135deg, #d4af37, #f4e4bc);
+            /* 每日行程颜色 - 卡通风格 */
+            --day1-color: #FF6B6B;
+            --day2-color: #4ECDC4;
+            --day3-color: #FFE66D;
+            --day4-color: #95E1D3;
+            --day5-color: #DDA0DD;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--gradient-1);
+            min-height: 100vh;
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .glass-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 24px;
+            box-shadow: var(--glass-shadow);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .glass-card-sm {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 16px;
+        }
+
+        .header {
+            text-align: center;
+            padding: 60px 20px;
+            background: linear-gradient(180deg, rgba(212, 175, 55, 0.1) 0%, transparent 100%);
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            background: var(--gradient-gold);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 16px;
+        }
+
+        .header .subtitle {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+        }
+
+        .travel-dates {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 12px 24px;
+            background: rgba(212, 175, 55, 0.15);
+            border: 1px solid var(--accent-gold);
+            border-radius: 30px;
+            color: var(--accent-gold);
+            font-weight: 500;
+        }
+
+        .start-point {
+            display: inline-block;
+            margin-top: 12px;
+            margin-left: 12px;
+            padding: 12px 24px;
+            background: rgba(76, 175, 80, 0.15);
+            border: 1px solid #4CAF50;
+            border-radius: 30px;
+            color: #4CAF50;
+            font-weight: 500;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 24px 60px;
+        }
+
+        .grid-2 {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+        }
+
+        @media (max-width: 1024px) {
+            .grid-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* 平板端适配 */
+        @media (max-width: 768px) {
+            .container {
+                padding: 16px;
+            }
+            .header {
+                padding: 24px 16px;
+            }
+            .header h1 {
+                font-size: 1.8rem;
+            }
+            .header .subtitle {
+                font-size: 0.9rem;
+            }
+            .map-container {
+                height: 400px;
+            }
+            .map-legend {
+                bottom: 10px;
+                left: 10px;
+                gap: 6px;
+            }
+            .legend-item {
+                padding: 4px 8px;
+                font-size: 0.7rem;
+            }
+            .spot-card {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+            .spot-carousel {
+                width: 100%;
+                height: 180px;
+                margin-left: 0;
+            }
+            .spot-time {
+                flex-direction: row;
+                gap: 8px;
+            }
+            .section-title {
+                font-size: 1.25rem;
+            }
+        }
+
+        /* 手机端适配 */
+        @media (max-width: 480px) {
+            .container {
+                padding: 12px;
+            }
+            .header {
+                padding: 20px 12px;
+            }
+            .header h1 {
+                font-size: 1.5rem;
+            }
+            .map-container {
+                height: 320px;
+            }
+            .map-legend {
+                bottom: 8px;
+                left: 8px;
+                gap: 4px;
+            }
+            .legend-item {
+                padding: 3px 6px;
+                font-size: 0.65rem;
+            }
+            .legend-dot {
+                width: 8px;
+                height: 8px;
+            }
+            .spot-card {
+                padding: 12px;
+            }
+            .spot-carousel {
+                height: 160px;
+            }
+            .spot-name {
+                font-size: 1rem;
+            }
+            .spot-desc {
+                font-size: 0.8rem;
+            }
+            .spot-tags {
+                gap: 4px;
+            }
+            .spot-tag {
+                padding: 2px 6px;
+                font-size: 0.65rem;
+            }
+            .day-card {
+                padding: 16px;
+            }
+            .day-title {
+                font-size: 1.1rem;
+            }
+            .transport-tag {
+                font-size: 0.75rem;
+                padding: 4px 8px;
+            }
+            .mini-spot {
+                padding: 10px;
+            }
+            .mini-icon {
+                width: 32px;
+                height: 32px;
+                font-size: 1.2rem;
+            }
+            .mini-name {
+                font-size: 0.85rem;
+            }
+            .entertainment-spot {
+                padding: 12px;
+            }
+            .ent-icon {
+                width: 36px;
+                height: 36px;
+                font-size: 1.3rem;
+            }
+            .meal-section {
+                padding: 12px;
+            }
+            .meal-item {
+                padding: 10px;
+            }
+            .budget-item {
+                padding: 12px;
+            }
+            .budget-item .icon {
+                font-size: 1.5rem;
+            }
+            .budget-item .amount {
+                font-size: 1.2rem;
+            }
+            .section-title {
+                font-size: 1.1rem;
+            }
+            .glass-card {
+                padding: 16px;
+                border-radius: 12px;
+            }
+            /* 地图tooltip在移动端隐藏 */
+            .map-spot-tooltip {
+                display: none;
+            }
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 24px;
+            background: var(--gradient-gold);
+            border-radius: 2px;
+        }
+
+        .map-container {
+            height: 550px;
+            border-radius: 16px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+
+        .map-legend {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            z-index: 100;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            max-width: 90%;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 12px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            user-select: none;
+            border: 1.5px solid transparent;
+        }
+
+        .legend-item[data-day="home"] {
+            cursor: default;
+        }
+
+        .legend-item.active {
+            border-color: rgba(255, 255, 255, 0.3);
+            box-shadow: 0 0 8px rgba(255, 255, 255, 0.1);
+        }
+
+        .legend-item:not([data-day="home"]):not(.active) {
+            opacity: 0.4;
+            filter: grayscale(0.6);
+        }
+
+        .legend-item:not([data-day="home"]):hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .legend-dot.home { background: #4CAF50; }
+        .legend-dot.day1 { background: var(--day1-color); }
+        .legend-dot.day2 { background: var(--day2-color); }
+        .legend-dot.day3 { background: var(--day3-color); }
+        .legend-dot.day4 { background: var(--day4-color); }
+        .legend-dot.day5 { background: var(--day5-color); }
+
+        /* 地图景点 hover 图片提示 */
+        .map-spot-tooltip {
+            position: absolute;
+            bottom: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%) translateY(6px);
+            width: 160px;
+            background: rgba(15, 15, 25, 0.95);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.6);
+            border: 1px solid rgba(255,255,255,0.15);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease, transform 0.25s ease;
+            z-index: 200;
+        }
+        .map-spot-marker {
+            z-index: 1;
+            transition: z-index 0s;
+        }
+        .map-spot-marker:hover {
+            z-index: 9999 !important;
+        }
+        .map-spot-marker:hover .map-spot-tooltip {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+        .map-spot-tooltip img {
+            width: 100%;
+            height: 100px;
+            object-fit: cover;
+            display: block;
+        }
+        .map-spot-tooltip .tooltip-name {
+            padding: 6px 8px;
+            font-size: 11px;
+            color: #fff;
+            text-align: center;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* 地图路线交通标记 */
+        .map-transport-marker {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1px;
+            pointer-events: none;
+        }
+        .map-transport-icon {
+            font-size: 18px;
+            line-height: 1;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+        }
+        .map-transport-duration {
+            font-size: 9px;
+            color: #fff;
+            background: rgba(0,0,0,0.7);
+            padding: 1px 6px;
+            border-radius: 6px;
+            white-space: nowrap;
+            font-weight: 600;
+            letter-spacing: 0.3px;
+        }
+        .budget-panel {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+        }
+
+        @media (max-width: 768px) {
+            .budget-panel {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .budget-item {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .budget-item .icon {
+            font-size: 2rem;
+            margin-bottom: 12px;
+        }
+
+        .budget-item .label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .budget-item .amount {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent-gold);
+        }
+
+        .budget-total {
+            text-align: center;
+            padding: 24px;
+            margin-top: 16px;
+            border-top: 1px solid var(--glass-border);
+        }
+
+        .budget-total .label {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .budget-total .amount {
+            font-size: 2.5rem;
+            font-weight: 700;
+            background: var(--gradient-gold);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .day-card {
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 每日卡片颜色标识 */
+        .day-card[data-day="1"] { border-left: 4px solid var(--day1-color); }
+        .day-card[data-day="2"] { border-left: 4px solid var(--day2-color); }
+        .day-card[data-day="3"] { border-left: 4px solid var(--day3-color); }
+        .day-card[data-day="4"] { border-left: 4px solid var(--day4-color); }
+        .day-card[data-day="5"] { border-left: 4px solid var(--day5-color); }
+
+        .day-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .day-number {
+            font-size: 2rem;
+            font-weight: 700;
+            background: var(--gradient-gold);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* 每日数字颜色 */
+        .day-card[data-day="1"] .day-number { background: linear-gradient(135deg, var(--day1-color), #ff8e8e); -webkit-background-clip: text; }
+        .day-card[data-day="2"] .day-number { background: linear-gradient(135deg, var(--day2-color), #7ee8e1); -webkit-background-clip: text; }
+        .day-card[data-day="3"] .day-number { background: linear-gradient(135deg, var(--day3-color), #fff09e); -webkit-background-clip: text; }
+        .day-card[data-day="4"] .day-number { background: linear-gradient(135deg, var(--day4-color), #b8f0e5); -webkit-background-clip: text; }
+        .day-card[data-day="5"] .day-number { background: linear-gradient(135deg, var(--day5-color), #ecc8ec); -webkit-background-clip: text; }
+
+        .day-date {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .day-weather {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            font-size: 0.85rem;
+        }
+
+        .route-info {
+            padding: 12px 16px;
+            background: rgba(76, 175, 80, 0.1);
+            border: 1px solid rgba(76, 175, 80, 0.3);
+            border-radius: 12px;
+            margin-bottom: 16px;
+            font-size: 0.9rem;
+        }
+
+        .route-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            padding: 4px 0;
+        }
+
+        .route-header:hover {
+            opacity: 0.8;
+        }
+
+        .route-info .route-title {
+            color: #4CAF50;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .route-arrow {
+            color: #4CAF50;
+            font-size: 0.8rem;
+            transition: transform 0.2s;
+        }
+
+        .route-summary {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin-top: 4px;
+        }
+
+        .route-detail {
+            display: none;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px dashed rgba(76, 175, 80, 0.3);
+        }
+
+        .route-step {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+            padding: 10px;
+            background: rgba(76, 175, 80, 0.05);
+            border-radius: 10px;
+        }
+
+        .route-step-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(76, 175, 80, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            font-size: 0.9rem;
+        }
+
+        .route-step-content {
+            flex: 1;
+        }
+
+        .route-step-title {
+            font-weight: 600;
+            color: #4CAF50;
+            font-size: 0.85rem;
+            margin-bottom: 4px;
+        }
+
+        .route-step-desc {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            line-height: 1.4;
+        }
+
+        .weather-tip {
+            margin-top: 12px;
+            padding: 10px 14px;
+            background: rgba(255, 193, 7, 0.1);
+            border: 1px solid rgba(255, 193, 7, 0.3);
+            border-radius: 10px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .weather-tip-icon {
+            font-size: 1.2rem;
+        }
+
+        .weather-tip-content {
+            flex: 1;
+        }
+
+        .weather-tip-title {
+            font-weight: 600;
+            color: #FFC107;
+            font-size: 0.85rem;
+            margin-bottom: 4px;
+        }
+
+        .weather-tip-desc {
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            line-height: 1.4;
+        }
+
+        .spot-card {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 16px;
+            padding: 16px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .spot-card:hover {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(212, 175, 55, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .spot-time {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 60px;
+        }
+
+        .spot-time .time {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--accent-gold);
+        }
+
+        .spot-time .duration {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        /* 景点图片样式 - 保留兼容 */
+        .spot-image {
+            width: 140px;
+            height: 100px;
+            border-radius: 12px;
+            object-fit: cover;
+            flex-shrink: 0;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            transition: transform 0.3s ease;
+            display: none;
+        }
+
+        .spot-card:hover .spot-image {
+            transform: scale(1.05);
+        }
+
+        /* 3D Coverflow 图片轮播 - 右侧布局 */
+        .spot-carousel {
+            width: 240px;
+            height: 150px;
+            perspective: 800px;
+            position: relative;
+            flex-shrink: 0;
+            overflow: hidden;
+            cursor: grab;
+            border-radius: 14px;
+            margin-left: auto;
+        }
+        .spot-carousel:active { cursor: grabbing; }
+        .spot-carousel .carousel-track {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+        }
+        .spot-carousel .carousel-slide {
+            position: absolute;
+            width: 180px;
+            height: 130px;
+            left: 50%;
+            top: 50%;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            cursor: pointer;
+            backface-visibility: hidden;
+        }
+        .spot-carousel .carousel-slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            pointer-events: none;
+        }
+        .spot-carousel .carousel-slide.active {
+            z-index: 10;
+            transform: translate(-50%, -50%) scale(1) rotateY(0deg);
+            box-shadow: 0 8px 30px rgba(212,175,55,0.25);
+            border: 2px solid rgba(212,175,55,0.4);
+        }
+        .spot-carousel .carousel-slide.prev {
+            z-index: 5;
+            transform: translate(-95%, -50%) scale(0.75) rotateY(30deg);
+            opacity: 0.6;
+            filter: brightness(0.65);
+        }
+        .spot-carousel .carousel-slide.next {
+            z-index: 5;
+            transform: translate(-5%, -50%) scale(0.75) rotateY(-30deg);
+            opacity: 0.6;
+            filter: brightness(0.65);
+        }
+        .spot-carousel .carousel-slide.far-prev {
+            z-index: 2;
+            transform: translate(-130%, -50%) scale(0.5) rotateY(45deg);
+            opacity: 0;
+            filter: brightness(0.4);
+        }
+        .spot-carousel .carousel-slide.far-next {
+            z-index: 2;
+            transform: translate(30%, -50%) scale(0.5) rotateY(-45deg);
+            opacity: 0;
+            filter: brightness(0.4);
+        }
+        .spot-carousel .carousel-slide.hidden {
+            z-index: 0;
+            transform: translate(-50%, -50%) scale(0.3) rotateY(0deg);
+            opacity: 0;
+            pointer-events: none;
+        }
+        .carousel-counter {
+            position: absolute;
+            bottom: 4px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.65rem;
+            color: rgba(255,255,255,0.6);
+            background: rgba(0,0,0,0.55);
+            padding: 2px 10px;
+            border-radius: 8px;
+            white-space: nowrap;
+            z-index: 20;
+        }
+
+        /* Lightbox 弹窗 */
+        .lightbox-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.92);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+        .lightbox-overlay.show {
+            display: flex;
+            animation: lbFadeIn 0.3s ease;
+        }
+        @keyframes lbFadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .lightbox-img-wrap {
+            position: relative;
+            max-width: 90vw;
+            max-height: 80vh;
+        }
+        .lightbox-img-wrap img {
+            max-width: 90vw;
+            max-height: 80vh;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            object-fit: contain;
+        }
+        .lightbox-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 44px; height: 44px;
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            z-index: 10001;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+        .lightbox-close:hover { background: rgba(255,255,255,0.3); }
+        .lightbox-nav {
+            position: absolute;
+            top: 50%; transform: translateY(-50%);
+            width: 50px; height: 50px;
+            background: rgba(255,255,255,0.12);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 50%;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+            z-index: 10001;
+        }
+        .lightbox-nav:hover { background: rgba(255,255,255,0.25); }
+        .lightbox-prev { left: 20px; }
+        .lightbox-next { right: 20px; }
+        .lightbox-title {
+            color: rgba(255,255,255,0.8);
+            font-size: 0.9rem;
+            margin-top: 16px;
+            text-align: center;
+        }
+        .lightbox-dots {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            justify-content: center;
+        }
+        .lightbox-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.3);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .lightbox-dot.active {
+            background: var(--accent-gold);
+            transform: scale(1.3);
+        }
+
+        .spot-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .spot-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .spot-address {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .spot-desc {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+
+        .reservation-alert {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 12px;
+            padding: 8px 16px;
+            background: rgba(244, 67, 54, 0.15);
+            border: 1px solid rgba(244, 67, 54, 0.3);
+            border-radius: 8px;
+            font-size: 0.85rem;
+        }
+
+        .reservation-alert .alert-icon {
+            background: #f44336;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .transport-tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            background: rgba(155, 89, 182, 0.15);
+            border: 1px solid rgba(155, 89, 182, 0.3);
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: #bb8fce;
+            margin: 12px 0;
+        }
+
+        /* 小景点/文创店卡片 */
+        .mini-spot {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 14px;
+            padding: 12px 16px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.04), rgba(212,175,55,0.04));
+            border-radius: 14px;
+            border: 1px dashed rgba(212,175,55,0.25);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        .mini-spot:hover {
+            background: linear-gradient(135deg, rgba(255,255,255,0.07), rgba(212,175,55,0.08));
+            border-color: rgba(212,175,55,0.4);
+            transform: translateY(-1px);
+        }
+        .mini-spot .mini-icon {
+            font-size: 1.5rem;
+            flex-shrink: 0;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(212,175,55,0.1);
+            border-radius: 12px;
+        }
+        .mini-spot .mini-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .mini-spot .mini-name {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--accent-gold);
+            margin-bottom: 2px;
+        }
+        .mini-spot .mini-desc {
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+        .mini-spot .mini-tag {
+            display: inline-block;
+            font-size: 0.65rem;
+            padding: 2px 8px;
+            border-radius: 10px;
+            background: rgba(212,175,55,0.15);
+            color: var(--accent-gold);
+            margin-top: 4px;
+            margin-right: 4px;
+        }
+
+        /* 娱乐休闲活动卡片 */
+        .entertainment-spot {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin: 16px 0;
+            padding: 14px 18px;
+            background: linear-gradient(135deg, rgba(155,89,182,0.08), rgba(52,152,219,0.08));
+            border-radius: 16px;
+            border: 1px solid rgba(155,89,182,0.3);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        .entertainment-spot::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #9b59b6, #3498db, #9b59b6);
+            background-size: 200% 100%;
+            animation: shimmer 3s ease infinite;
+        }
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+        .entertainment-spot:hover {
+            background: linear-gradient(135deg, rgba(155,89,182,0.14), rgba(52,152,219,0.14));
+            border-color: rgba(155,89,182,0.5);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(155,89,182,0.15);
+        }
+        .entertainment-spot .ent-icon {
+            font-size: 1.8rem;
+            flex-shrink: 0;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, rgba(155,89,182,0.15), rgba(52,152,219,0.15));
+            border-radius: 14px;
+        }
+        .entertainment-spot .ent-info {
+            flex: 1;
+            min-width: 0;
+        }
+        .entertainment-spot .ent-name {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #bb86fc;
+            margin-bottom: 2px;
+        }
+        .entertainment-spot .ent-desc {
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+        .entertainment-spot .ent-meta {
+            display: flex;
+            gap: 8px;
+            margin-top: 4px;
+            flex-wrap: wrap;
+        }
+        .entertainment-spot .ent-tag {
+            display: inline-block;
+            font-size: 0.65rem;
+            padding: 2px 8px;
+            border-radius: 10px;
+            background: rgba(155,89,182,0.15);
+            color: #bb86fc;
+        }
+        .entertainment-spot .ent-price {
+            display: inline-block;
+            font-size: 0.65rem;
+            padding: 2px 8px;
+            border-radius: 10px;
+            background: rgba(52,152,219,0.15);
+            color: #5dade2;
+        }
+
+        .meal-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--glass-border);
+        }
+
+        .meal-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--accent-gold);
+        }
+
+        .meal-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            margin-bottom: 8px;
+        }
+
+        .meal-info {
+            flex: 1;
+        }
+
+        .meal-name {
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .meal-address {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .meal-price {
+            color: var(--accent-gold);
+            font-weight: 600;
+        }
+
+        .ai-chat {
+            margin-top: 24px;
+        }
+
+        /* 浮动助手 + 置顶按钮 */
+        .float-buttons {
+            position: fixed;
+            right: 24px;
+            bottom: 32px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            z-index: 9000;
+        }
+        .float-btn {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        .float-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 28px rgba(0,0,0,0.5);
+        }
+        .float-btn-chat {
+            background: linear-gradient(135deg, #9b59b6, #3498db);
+            color: white;
+            animation: floatPulse 3s ease-in-out infinite;
+        }
+        @keyframes floatPulse {
+            0%, 100% { box-shadow: 0 4px 20px rgba(155,89,182,0.4); }
+            50% { box-shadow: 0 4px 28px rgba(155,89,182,0.7); }
+        }
+        .float-btn-top {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.15);
+            color: var(--text-secondary);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s, transform 0.3s;
+        }
+        .float-btn-top.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .float-btn-top:hover {
+            color: var(--accent-gold);
+            border-color: rgba(212,175,55,0.4);
+        }
+        .float-btn-home {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.15);
+            color: var(--text-secondary);
+            font-size: 1.3rem;
+        }
+        .float-btn-home:hover {
+            color: var(--accent-gold);
+            border-color: rgba(212,175,55,0.4);
+        }
+        .float-btn-theme {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.15);
+            color: var(--text-secondary);
+            font-size: 1.3rem;
+        }
+        .float-btn-theme:hover {
+            color: var(--accent-gold);
+            border-color: rgba(212,175,55,0.4);
+        }
+
+        /* 白天主题 */
+        body.light-theme {
+            --bg-primary: #f5f7fa;
+            --bg-secondary: #ffffff;
+            --glass-bg: rgba(255, 255, 255, 0.8);
+            --glass-border: rgba(0, 0, 0, 0.1);
+            --text-primary: #1a1a2e;
+            --text-secondary: #4a4a6a;
+            background: linear-gradient(135deg, #e8f4f8 0%, #f5f7fa 50%, #fef9f3 100%);
+        }
+        body.light-theme .glass-card {
+            background: var(--glass-bg);
+            border-color: var(--glass-border);
+        }
+        body.light-theme .day-card {
+            background: var(--glass-bg);
+        }
+        body.light-theme .spot-card {
+            background: rgba(0, 0, 0, 0.03);
+            border-color: rgba(0, 0, 0, 0.08);
+        }
+        body.light-theme .spot-card:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+        body.light-theme .chat-panel {
+            background: rgba(255, 255, 255, 0.95);
+            border-color: var(--glass-border);
+        }
+        body.light-theme .chat-bubble {
+            background: rgba(0, 0, 0, 0.05);
+        }
+        body.light-theme .chat-message.user .chat-bubble {
+            background: rgba(155, 89, 182, 0.15);
+        }
+        body.light-theme .float-btn-top,
+        body.light-theme .float-btn-home,
+        body.light-theme .float-btn-theme {
+            background: rgba(255, 255, 255, 0.9);
+            border-color: rgba(0, 0, 0, 0.1);
+            color: var(--text-primary);
+        }
+        body.light-theme .mini-spot {
+            background: linear-gradient(135deg, rgba(212,175,55,0.08), rgba(255,255,255,0.5));
+        }
+        body.light-theme .meal-section {
+            background: rgba(255, 255, 255, 0.6);
+        }
+        body.light-theme .transport-tag {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        /* 浮动聊天面板 */
+        .chat-panel {
+            position: fixed;
+            right: 24px;
+            bottom: 100px;
+            width: 380px;
+            max-height: 520px;
+            background: rgba(20, 20, 35, 0.95);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255,255,255,0.12);
+            border-radius: 20px;
+            box-shadow: 0 12px 48px rgba(0,0,0,0.6);
+            z-index: 9001;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transform: scale(0.8) translateY(20px);
+            opacity: 0;
+            pointer-events: none;
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.25s ease;
+            transform-origin: bottom right;
+        }
+        .chat-panel.open {
+            transform: scale(1) translateY(0);
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .chat-panel-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            background: linear-gradient(135deg, rgba(155,89,182,0.15), rgba(52,152,219,0.15));
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+        .chat-panel-header h3 {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .chat-panel-close {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(255,255,255,0.08);
+            color: var(--text-secondary);
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+        }
+        .chat-panel-close:hover {
+            background: rgba(255,255,255,0.15);
+            color: white;
+        }
+        @media (max-width: 480px) {
+            .chat-panel {
+                right: 8px;
+                bottom: 90px;
+                width: calc(100vw - 16px);
+                max-height: 70vh;
+            }
+            .float-buttons {
+                right: 16px;
+                bottom: 20px;
+            }
+        }
+
+        .chat-messages {
+            flex: 1;
+            min-height: 260px;
+            max-height: 360px;
+            overflow-y: auto;
+            padding: 16px;
+            background: rgba(0, 0, 0, 0.15);
+            border-radius: 16px;
+            margin-bottom: 16px;
+        }
+
+        .chat-message {
+            margin-bottom: 16px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .chat-message.user {
+            flex-direction: row-reverse;
+        }
+
+        .chat-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: var(--gradient-gold);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            flex-shrink: 0;
+        }
+
+        .chat-message.user .chat-avatar {
+            background: var(--accent-purple);
+        }
+
+        .chat-bubble {
+            max-width: 80%;
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            border-top-left-radius: 4px;
+        }
+
+        .chat-message.user .chat-bubble {
+            background: rgba(155, 89, 182, 0.2);
+            border-radius: 16px;
+            border-top-right-radius: 4px;
+        }
+
+        .chat-input-wrap {
+            display: flex;
+            gap: 10px;
+            padding: 12px 16px;
+            border-top: 1px solid rgba(255,255,255,0.08);
+            background: rgba(0,0,0,0.1);
+        }
+
+        .chat-input {
+            flex: 1;
+            padding: 10px 16px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .chat-input:focus {
+            border-color: var(--accent-gold);
+        }
+
+        .chat-input::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .chat-send {
+            padding: 10px 20px;
+            background: var(--gradient-gold);
+            border: none;
+            border-radius: 20px;
+            color: #1a1a2e;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            white-space: nowrap;
+        }
+
+        .chat-send:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(212, 175, 55, 0.3);
+        }
+
+        .chat-send:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading-dots span {
+            animation: blink 1.4s infinite both;
+        }
+
+        .loading-dots span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .loading-dots span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        @keyframes blink {
+            0%, 80%, 100% { opacity: 0; }
+            40% { opacity: 1; }
+        }
+
+        .tips-list {
+            list-style: none;
+        }
+
+        .tips-list li {
+            padding: 12px 16px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .tips-list li::before {
+            content: '💡';
+            flex-shrink: 0;
+        }
+
+        .reservation-list {
+            list-style: none;
+        }
+
+        .reservation-list li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            background: rgba(244, 67, 54, 0.05);
+            border: 1px solid rgba(244, 67, 54, 0.15);
+            border-radius: 12px;
+            margin-bottom: 12px;
+        }
+
+        .reservation-spot {
+            font-weight: 600;
+        }
+
+        .reservation-channel {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .reservation-link {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #FF6B6B, #ee5a5a);
+            border: none;
+            border-radius: 20px;
+            color: white;
+            text-decoration: none;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(244, 67, 54, 0.3);
+        }
+
+        .reservation-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(244, 67, 54, 0.4);
+        }
+
+        .footer {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* 返回首页缩小特效 */
+        .page-shrink-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 99999;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        .page-shrink-overlay .shrink-mask {
+            position: absolute;
+            border-radius: 50%;
+            background: radial-gradient(circle, transparent 0%, transparent 38%, rgba(15,20,40,0.97) 62%);
+            animation: shrinkCircle 0.8s cubic-bezier(0.4, 0, 0.8, 0.4) forwards;
+        }
+        @keyframes shrinkCircle {
+            0% { transform: scale(1); }
+            100% { transform: scale(0); }
+        }
+        .page-shrink-overlay .shrink-flash {
+            position: absolute;
+            border-radius: 50%;
+            border: 2px solid rgba(212,175,55,0.6);
+            pointer-events: none;
+            animation: shrinkRipple 0.6s ease-in forwards;
+        }
+        @keyframes shrinkRipple {
+            0% { transform: translate(-50%,-50%) scale(3); opacity: 0; }
+            50% { opacity: 0.8; }
+            100% { transform: translate(-50%,-50%) scale(0); opacity: 0; }
+        }
+        .page-shrink-overlay .home-icon-anim {
+            position: absolute;
+            font-size: 2.5rem;
+            opacity: 0;
+            animation: homeIconPop 0.4s 0.35s cubic-bezier(0.34,1.56,0.64,1) forwards;
+        }
+        @keyframes homeIconPop {
+            0% { transform: translate(-50%,-50%) scale(0); opacity: 0; }
+            100% { transform: translate(-50%,-50%) scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>武汉 旅行规划</h1>
+            <p class="subtitle">基于小红书真实游记的智能行程规划</p>
+        <div class="travel-dates">2026年5月1日 - 5月5日</div>
+        <div class="start-point">🏠 出发点：江夏·当代国际城</div>
+    </header>
+
+    <div class="container">
+        <!-- 预算概览 -->
+        <section class="glass-card">
+            <h2 class="section-title">预算明细</h2>
+            <div class="budget-panel">
+                <div class="budget-item glass-card-sm">
+                    <div class="icon">🎫</div>
+                    <div class="label">门票</div>
+                    <div class="amount">¥223</div>
+                </div>
+                <div class="budget-item glass-card-sm">
+                    <div class="icon">🍜</div>
+                    <div class="label">餐饮</div>
+                    <div class="amount">¥1150</div>
+                </div>
+                <div class="budget-item glass-card-sm">
+                    <div class="icon">🚗</div>
+                    <div class="label">交通</div>
+                    <div class="amount">¥400</div>
+                </div>
+                <div class="budget-item glass-card-sm">
+                    <div class="icon">🎮</div>
+                    <div class="label">娱乐</div>
+                    <div class="amount">¥684</div>
+                </div>
+            </div>
+            <div class="budget-total">
+                <div class="label">预计总花费</div>
+                <div class="amount">¥2457</div>
+            </div>
+        </section>
+
+        <!-- 互动地图 -->
+        <section class="glass-card">
+            <h2 class="section-title">行程地图</h2>
+            <div class="map-container">
+                <div id="map"></div>
+                <div class="map-legend" id="mapLegend">
+                    <div class="legend-item" data-day="home">
+                        <span class="legend-dot home"></span>
+                        <span>出发点</span>
+                    </div>
+                    <div class="legend-item active" data-day="1" onclick="filterMapDay(1)">
+                        <span class="legend-dot day1"></span>
+                        <span>Day1</span>
+                    </div>
+                    <div class="legend-item active" data-day="2" onclick="filterMapDay(2)">
+                        <span class="legend-dot day2"></span>
+                        <span>Day2</span>
+                    </div>
+                    <div class="legend-item active" data-day="3" onclick="filterMapDay(3)">
+                        <span class="legend-dot day3"></span>
+                        <span>Day3</span>
+                    </div>
+                    <div class="legend-item active" data-day="4" onclick="filterMapDay(4)">
+                        <span class="legend-dot day4"></span>
+                        <span>Day4</span>
+                    </div>
+                    <div class="legend-item active" data-day="5" onclick="filterMapDay(5)">
+                        <span class="legend-dot day5"></span>
+                        <span>Day5</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 每日行程 -->
+        <section>
+            <h2 class="section-title">每日行程</h2>
+            
+            <!-- Day 1 -->
+            <div class="glass-card day-card" data-day="1">
+                <div class="day-header">
+                    <div>
+                        <div class="day-number">Day 1</div>
+                        <div class="day-date">2026年5月1日 周五</div>
+                    </div>
+                    <div class="day-weather">
+                        <span>☁️</span>
+                        <span>多云转阴 15-29°C</span>
+                    </div>
+                </div>
+
+                <div class="route-info">
+                    <div class="route-header" onclick="toggleRouteDetail(this)">
+                        <div>
+                            <div class="route-title">🏠 出发路线 <span class="route-arrow">▶</span></div>
+                            <div class="route-summary">当代国际城 → 黄鹤楼（约55分钟）建议：地铁出行</div>
+                        </div>
+                    </div>
+                    <div class="route-detail">
+                        <div class="route-step">
+                            <div class="route-step-icon">🚶</div>
+                            <div class="route-step-content">
+                                <div class="route-step-title">步行至佛祖岭地铁站</div>
+                                <div class="route-step-desc">从当代国际城小区北门出发，沿高新六路向西步行约600米，到达地铁2号线佛祖岭站<strong>B口</strong>进站</div>
+                            </div>
+                        </div>
+                        <div class="route-step">
+                            <div class="route-step-icon">🚇</div>
+                            <div class="route-step-content">
+                                <div class="route-step-title">地铁2号线 → 光谷广场站换乘</div>
+                                <div class="route-step-desc">乘坐2号线（往天河机场方向）9站到光谷广场站，站内换乘4号线（约25分钟）</div>
+                            </div>
+                        </div>
+                        <div class="route-step">
+                            <div class="route-step-icon">🚇</div>
+                            <div class="route-step-content">
+                                <div class="route-step-title">地铁4号线 → 复兴路站</div>
+                                <div class="route-step-desc">乘坐4号线（往柏林方向）6站到复兴路站，从<strong>D口</strong>出站（约15分钟）</div>
+                            </div>
+                        </div>
+                        <div class="route-step">
+                            <div class="route-step-icon">🚶</div>
+                            <div class="route-step-content">
+                                <div class="route-step-title">步行至黄鹤楼</div>
+                                <div class="route-step-desc">出站后沿彭刘杨路向东步行约500米即到黄鹤楼东门（约8分钟）</div>
+                            </div>
+                        </div>
+                        <div class="weather-tip">
+                            <div class="weather-tip-icon">☁️</div>
+                            <div class="weather-tip-content">
+                                <div class="weather-tip-title">天气建议</div>
+                                <div class="weather-tip-desc">今日多云转阴（15-29°C），适合地铁出行，无需带雨具。建议早出发，10点前到达可避开人流高峰。</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="spot-card">
+                    <div class="spot-time">
+                        <span class="time">10:00</span>
+                        <span class="duration">2小时</span>
+                    </div>
+                    <img class="spot-image" src="images/huanghelou/1.jpg" alt="黄鹤楼" onerror="this.src='https://picsum.photos/140/100?huanghelou'">
+                    <div class="spot-info">
+                        <div class="spot-name">🏛️ 黄鹤楼</div>
+                        <div class="spot-address">📍 武昌区蛇山西山坡特1号</div>
+                        <div class="spot-desc">江南三大名楼之首，登楼远眺长江、武汉长江大桥全景，可观看免费编钟表演</div>
+                        <div class="reservation-alert">
+                            <span class="alert-icon">预约</span>
+                            <span>需提前1-7天预约 | 预约渠道：黄鹤楼公园公众号</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="transport-tag">🚶 步行 · 约10分钟</div>
+
+                <div class="mini-spot">
+                    <div class="mini-icon">🍰</div>
+                    <div class="mini-info">
+                        <div class="mini-name">曹祥泰</div>
+                        <div class="mini-desc">始创于1884年的百年糕点老字号，招牌绿豆糕入口即化、桂花糕清甜不腻，是武汉人过节必买的伴手礼</div>
+                        <span class="mini-tag">📍 司门口自由路</span>
+                        <span class="mini-tag">人均 ¥20</span>
+                        <span class="mini-tag">百年老字号</span>
+                    </div>
+                </div>
+
+                <div class="transport-tag">🚶 步行 · 约3分钟</div>
+
+                <div class="spot-card">
+                    <div class="spot-time">
+                        <span class="time">12:30</span>
+                        <span class="duration">2小时</span>
+                    </div>
+                    <img class="spot-image" src="images/hubuxiang/1.jpg" alt="户部巷" onerror="this.src='https://picsum.photos/140/100?hubuxiang'">
+                    <div class="spot-info">
+                        <div class="spot-name">🍜 户部巷</div>
+                        <div class="spot-address">📍 武昌区司门口户部巷</div>
+                        <div class="spot-desc">汉味小吃第一巷，必吃蔡林记热干面、三鲜豆皮、糊汤粉、面窝</div>
+                    </div>
+                </div>
+
+                <div class="transport-tag">🚶 步行 · 约15分钟</div>
+
+                <div class="mini-spot">
+                    <div class="mini-icon">☕</div>
+                    <div class="mini-info">
+                        <div class="mini-name">52O世外 Cafe & Bar</div>
+                        <div class="mini-desc">藏在崇福山巷里的天台咖啡馆，可以看到黄鹤楼和长江大桥的绝美日落，需提前预约屋顶位</div>
+                        <span class="mini-tag">📍 崇福山巷</span>
+                        <span class="mini-tag">人均 ¥45</span>
+                        <span class="mini-tag">天台日落</span>
+                    </div>
+                </div>
+
+                <div class="transport-tag">🚶 步行 · 约5分钟</div>
+
+                <div class="spot-card">
+                    <div class="spot-time">
+                        <span class="time">15:00</span>
+                        <span class="duration">2.5小时</span>
+                    </div>
+                    <img class="spot-image" src="images/changjiangdaqiao/1.jpg" alt="长江大桥" onerror="this.src='https://picsum.photos/140/100?changjiangdaqiao'">
+                    <div class="spot-info">
+                        <div class="spot-name">🌊 武昌江滩 & 长江大桥</div>
+                        <div class="spot-address">📍 武昌区临江大道</div>
+                        <div class="spot-desc">漫步江滩，步行过长江大桥感受"一桥飞架南北"的壮观</div>
+                    </div>
+                </div>
+
+                <div class="transport-tag">🚶 步行 · 约5分钟到码头</div>
+                <div class="entertainment-spot">
+                    <div class="ent-icon">⛴️</div>
+                    <div class="ent-info">
+                        <div class="ent-name">武中零点航线 · 长江夜游轮渡</div>
+                        <div class="ent-desc">晚8点后开放的敞篷双层游船，超低价体验长江夜景。上层甲板吹江风看两岸灯火，比游轮更接地气的武汉本地人玩法</div>
+                        <div class="ent-meta">
+                            <span class="ent-tag">🕐 20:00-21:00</span>
+                            <span class="ent-tag">📍 武昌红巷码头</span>
+                            <span class="ent-price">💰 ¥10/人</span>
+                            <span class="ent-tag">🌃 夜景绝佳</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="meal-section">
+                    <div class="meal-title">🍽️ 餐饮推荐</div>
+                    <div class="meal-item">
+                        <div class="meal-info">
+                            <div class="meal-name">蔡林记热干面</div>
+                            <div class="meal-address">📍 户部巷内</div>
+                        </div>
+                        <div class="meal-price">人均 ¥30</div>
+                    </div>
+                    <div class="meal-item">
+                        <div class="meal-info">
+                            <div class="meal-name">靓靓蒸虾</div>
+                            <div class="meal-address">📍 武昌区彭刘杨路</div>
+                        </div>
+                        <div class="meal-price">人均 ¥120</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Day 2 -->
+            <div class="glass-card day-card" data-day="2">
+                <div class="day-header">
+                    <div>
+                        <div class="day-number">Day 2</div>
+                        <div class="day-date">2026年5月2日 周六</div>
+                    </div>
+                    <div class="day-weather">
+                        <span>🌧️</span>
+                        <span>阴有大雨 17-23°C</span>
+                    </div>
+                </div>
+
+                <div class="route-info">
+                    <div class="route-header" onclick="toggleRouteDetail(this)">
+                        <div>
+                            <div class="route-title">🏠 出发路线 <span class="route-arrow">▶</span></div>
+                            <div class="route-summary">当代国际城 → 湖北省博物馆（约50分钟）建议：🚕 打车出行</div>
+                        </div>
+                    </div>
+                    <div class="route-detail">
+                        <div class="route-step">
+                            <div class="route-step-icon">🚕</div>
+                            <div class="route-step-content">
+                                <div class="route-step-title">推荐打车（大雨天气）</div>
+                                <div class="route-step-desc">从当代国际城直接打车至湖北省博物馆，预计费用约45-55元，车程约35分钟。建议提前叫车避免等待。</div>
+                            </div>
+                        </div>
+                        <div class="route-step">
+                            <div class="route-step-icon">🚇</div>
+                            <div class="route-step-content">
+                                <div class="route-step-title">备选方案：地铁（如雨停）</div>
+                                <div class="route-step-desc">佛祖岭站B口 → 2号线到光谷广场站 → 换乘4号线到东亭站<strong>A口</strong>出 → 步行800米到省博（约50分钟）</div>
+                            </div>
+                        </div>
+                        <div class="weather-tip">
+                            <div class="weather-tip-icon">🌧️</div>
+                            <div class="weather-tip-content">
+                                <div class="weather-tip-title">⚠️ 大雨天气调整</div>
+                                <div class="weather-tip-desc">今日阴有大雨（17-23°C），<strong>强烈建议打车出行</strong>，避免淋湿影响游览体验。省博是室内景点，不受雨天影响。东湖骑行可根据实际天气决定是否进行，如雨势较大建议改去楚河汉街（室内）。</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="spot-card">
+                    <div class="spot-time">
+                        <span class="time">10:00</span>
+                        <span class="duration">3小时</span>
+                    </div>
+                    <img class="spot-image" src="images/hubeimuseum/1.jpg" alt="湖北省博物馆" onerror="this.src='https://picsum.photos/140/100?hubeimuseum'">
+                    <div class="spot-info">
+                        <div class="spot-name">🏛️ 湖北省博物馆</div>
+                        <div class="spot-address">📍 武昌区东湖路160号</div>
+                        <div class="spot-desc">国家一级博物馆，必看三宝：越王勾践剑、曾侯乙编钟、郧县人头骨化石</div>
+                        <div class="reservation-alert">
+                            <span class="alert-icon">预约</span>
+                            <span>每日17:18放票，提前5天预约 | 预约渠道：湖北省博物馆公众号</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="transport-tag">🚌 公交 · 约20分钟</div>
+
+                <div class="mini-spot">
+                    <div class="mini-icon">☕</div>
+                    <div class="mini-info">
+                        <div class="mini-name">东湖杉林咖啡</div>
+                        <div class="mini-desc">隐在东湖水杉林中的湖景咖啡馆，窗外就是水杉和湖面，雨天更添意境，适合逛完省博后小憩</div>
+                        <span class="mini-tag">📍 东湖听涛景区旁</span>
+                        <span class="mini-tag">人均 ¥38</span>
+                        <span class="mini-tag">湖景落地窗</span>
+                    </div>
+                </div>
+
+                <div class="transport-tag">🚶 步行 · 约5分钟</div>
+
+                <div class="spot-card">
+                    <div class="spot-time">
+                        <span class="time">14:00</span>
+                        <span class="duration">4小时</span>
+                    </div>
+                    <img class="spot-image" src="images/donghu/1.jpg" alt="东湖" onerror="this.src='https://picsum.photos/140/100?donghu'">
+                    <div class="spot-info">
+                        <div class="spot-name">🌊 东湖听涛景区 & 绿道骑行</div>
+                        <div class="spot-address">📍 武昌区沿湖大道附近</div>
+                        <div class="spot-desc">中国最大城中湖，漫步行吟阁，绿道骑行10-20公里，湖光山色秀美宜人</div>
+                    </div>
+                </div>
+
+                <div class="transport-tag">🚕 打车 · 约30分钟</div>
+                <div class="entertainment-spot">
+                    <div class="ent-icon">🎮</div>
+                    <div class="ent-info">
+                        <div class="ent-name">PARTYDAY运动超乐场 · 50+运动狂欢</div>
+                        <div class="ent-desc">5000平米室内运动综合体，蹦床、保龄球、VR体验、射箭、真人CS、攀岩、高尔夫模拟、滑冰、卡丁车一票通玩。雨天室内娱乐首选</div>
+                        <div class="ent-meta">
+                            <span class="ent-tag">🕐 19:00-22:00</span>
+                            <span class="ent-tag">📍 万象城5楼</span>
+                            <span class="ent-price">💰 ¥158/4小时</span>
+                            <span class="ent-tag">🌧️ 雨天推荐</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="meal-section">
+                    <div class="meal-title">🍽️ 餐饮推荐</div>
+                    <div class="meal-item">
+                        <div class="meal-info">
+                            <div class="meal-name">省博附近简餐</div>
+                            <div class="meal-address">📍 东湖路</div>
+                        </div>
+                        <div class="meal-price">人均 ¥60</div>
+                    </div>
+                    <div class="meal-item">
+                        <div class="meal-info">
+                            <div class="meal-name">巴厘龙虾</div>
+                            <div class="meal-address">📍 楚河汉街</div>
+                        </div>
+                        <div class="meal-price">人均 ¥100</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Day 3 -->
+            <div class="glass-card day-card" data-day="3">
+                <div class="day-header">
+                    <div>
+                        <div class="day-number">Day 3</div>
+                        <div class="day-date">2026年5月3日 周日</div>
+                    </div>
+                    <div class="day-weather">
+                        <span>🌧️</span>
+                        <span>阴有大雨 17-24°C</span>
+                    </div>
+                </div>
+
+                <div class="route-info">
+                    <div class="route-header" onclick="toggleRouteDetail(this)">
+                        <div>
+                            <div class="route-title">🏠 出发路线 <span class="route-arrow">▶</span></div>
+                            <div class="route-summary">当代国际城 → 古德寺（约55分钟）建议：🚕 打车出行</div>
+                        </div>
+                    </div>
+                    <div class="route-detail">
+                        <div class="route-step">
+                            <div class="route-step-icon">🚕</div>
+                            <div class="route-step-content">
+                                <div class="route-step-title">推荐打车（小雨天气）</div>
+                                <div class="route-step-desc">从当代国际城直接打车至古德寺，预计费用约50-60元，车程约40分钟。可用滴滴/高德打车提前预约。</div>
+                            </div>
+                        </div>
+                        <div class="route-step">
+                            <div class="route-step-icon">🚇</div>
+                            <div class="route-step-content">
+                                <div class="route-step-title">备选方案：地铁（如天气好转）</div>
+                                <div class="route-step-desc">佛祖岭站B口 → 2号线到中南路站 → 换乘4号线到武汉火车站 → 换乘8号线到黄浦路站<strong>A口</strong>出 → 步行约500米到古德寺</div>
+                            </div>
+                        </div>
+                        <div class="weather-tip">
+                            <div class="weather-tip-icon">🌧️</div>
+                            <div class="weather-tip-content">
+                                <div class="weather-tip-title">⚠️ 小雨天气调整</div>
+                                <div class="weather-tip-desc">今日阴有小雨（18-24°C），建议携带雨伞。古德寺是半室外景点，雨天可能影响拍照。下午黎黄陂路是室内文艺街区，适合雨天游览。如雨势较大，可调整为先去室内的武汉美术馆。</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="spot-card">
+                    <div class="spot-time">
+                        <span class="time">10:00</span>
+                        <span class="duration">1.5小时</span>
+                    </div>
+                    <img class="spot-image" src="images/gudesi/1.jpg" alt="古德寺" onerror="this.src='https://picsum.photos/140/100?gudesi'">
+                    <div class="spot-info">
+                        <div class="spot-name">🛕 古德寺</div>
+                        <div class="spot-address">📍 江岸区工农兵路24号</div>
+                        <div class="spot-desc">中西合璧的东南亚风格建筑，网红打卡圣地，门票13元</div>
+                    </div>
+                </div>
+
+                <div class="transport-tag">🚇 地铁 · 约25分钟</div>
+
+                <div class="mini-spot">
+                    <div class="mini-icon">🏭</div>
+                    <div class="mini-info">
+                        <div class="mini-name">平和打包厂</div>
+                        <div class="mini-desc">1905年英商建造的工业遗址改造成文创园，内有脱口秀剧场、独立咖啡店、复古古着店，斑驳红砖墙超适合拍照</div>
+                        <span class="mini-tag">📍 江岸区鄱阳街58号</span>
+                        <span class="mini-tag">免费参观</span>
+                        <span class="mini-tag">工业遗址</span>
+                    </div>
+                </div>
+
+                <div class="transport-tag">🚶 步行 · 约5分钟</div>
+
+                <div class="spot-card">
+                    <div class="spot-time">
+                        <span class="time">12:00</span>
+                        <span class="duration">1.5小时</span>
+                    </div>
+                    <img class="spot-image" src="images/lihuangpilu/1.jpg" alt="黎黄陂路" onerror="this.src='https://picsum.photos/140/100?lihuangpilu'">
+                    <div class="spot-info">
+                        <div class="spot-name">🏛️ 黎黄陂路</div>
+                        <div class="spot-address">📍 江岸区黎黄陂路</div>
+                        <div class="spot-desc">武汉慢生活街区，百年历史建筑，文艺咖啡馆聚集地</div>
+                    </div>
+                </div>
+
+                <div class="transport-tag">🚶 步行 · 约10分钟</div>
+
+                <div class="mini-spot">
+                    <div class="mini-icon">🏘️</div>
+                    <div class="mini-info">
+                        <div class="mini-name">咸安坊</div>
+                        <div class="mini-desc">武汉仅存的完整石库门里弄建筑群，1920年代建造，青砖黛瓦间藏着手作银饰工坊和独立书店</div>
+                        <span class="mini-tag">📍 南京路与胜利街交汇</span>
+                        <span class="mini-tag">免费开放</span>
+                        <span class="mini-tag">百年里弄</span>
+                    </div>
+                </div>
+
+                <div class="transport-tag">🚶 步行 · 约5分钟</div>
+
+                <div class="spot-card">
+                    <div class="spot-time">
+                        <span class="time">14:00</span>
+                        <span class="duration">3小时</span>
+                    </div>
+                    <img class="spot-image" src="images/jianghanlu/1.jpg" alt="江汉路" onerror="this.src='https://picsum.photos/140/100?jianghanlu'">
+                    <div class="spot-info">
+                        <div class="spot-name">🛍️ 江汉路步行街</div>
+                        <div class="spot-address">📍 江汉区江汉路</div>
+                        <div class="spot-desc">百年商业老街，民国风格建筑，武汉最繁华商圈之一</div>
+                    </div>
+                </div>
+
+                <div class="transport-tag">🚶 步行 · 约5分钟</div>
+
+                <div class="spot-card">
+                    <div class="spot-time">
+                        <span class="time">17:00</span>
+                        <span class="duration">2小时</span>
+                    </div>
+                    <img class="spot-image" src="images/hankoujiangtan/1.jpg" alt="汉口江滩" onerror="this.src='https://picsum.photos/140/100?hankoujiangtan'">
+                    <div class="spot-info">
+                        <div class="spot-name">🌅 汉口江滩</div>
+                        <div class="spot-address">📍 江岸区沿江大道</div>
+                        <div class="spot-desc">看长江日落和两江四岸夜景，深秋芦苇荡是拍照圣地</div>
+                    </div>
+                </div>
+
+                <div class="transport-tag">🚕 打车 · 约25分钟</div>
+                <div class="entertainment-spot">
+                    <div class="ent-icon">🎭</div>
+                    <div class="ent-info">
+                        <div class="ent-name">听风沉浸式推理馆 · 剧本杀</div>
+                        <div class="ent-desc">光谷最大沉浸式推理馆，1086平米超大场地，13个主题房间。硬核本/情感本/欢乐本可选，专业DM全程带队，沉浸式换装入戏</div>
+                        <div class="ent-meta">
+                            <span class="ent-tag">🕐 19:30-22:00</span>
+                            <span class="ent-tag">📍 光谷总店</span>
+                            <span class="ent-price">💰 ¥118/人</span>
+                            <span class="ent-tag">🧩 2-4小时</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="meal-section">
+                    <div class="meal-title">🍽️ 餐饮推荐</div>
+                    <div class="meal-item">
+                        <div class="meal-info">
+                            <div class="meal-name">老通城三鲜豆皮</div>
+                            <div class="meal-address">📍 中山大道1085号</div>
+                        </div>
+                        <div class="meal-price">人均 ¥40</div>
+                    </div>
+                    <div class="meal-item">
+                        <div class="meal-info">
+                            <div class="meal-name">四季美汤包</div>
+                            <div class="meal-address">📍 中山大道854号</div>
+                        </div>
+                        <div class="meal-price">人均 ¥50</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Day 4 -->
+            <div class="glass-card day-card" data-day="4">
+                <div class="day-header">
+                    <div>
+                        <div class="day-number">Day 4</div>
+                        <div class="day-date">2026年5月4日 周一</div>
+                    </div>
+                    <div class="day-weather">
+                        <span>⛅</span>
+                        <span>多云 18-25°C</span>
+                    </div>
+                </div>
+
+                <div class="route-info">
+                    <div class="route-header" onclick="toggleRouteDetail(this)">
+                        <div>
+                            <div class="route-title">🏠 出发路线 <span class="route-arrow">▶</span></div>
+                            <div class="route-summary">当代国际城 → 归元禅寺（约50分钟）建议：🚇 地铁出行</div>
+                        </div>
+                    </div>
+                    <div class="route-detail">
+                        <div class="route-step">
+                            <div class="route-step-icon">🚶</div>
+                            <div class="route-step-content">
+                                <div class="route-step-title">步行至佛祖岭地铁站</div>
+                                <div class="route-step-desc">从当代国际城小区北门出发，沿高新六路向西步行约600米，到达地铁2号线佛祖岭站<strong>B口</strong>进站</div>
+                            </div>
+                        </div>
+                        <div class="route-step">
+                            <div class="route-step-icon">🚇</div>
+                            <div class="route-step-content">
+                                <div class="route-step-title">乘坐地铁2号线</div>
+                                <div class="route-step-desc">佛祖岭站 → 光谷广场站 → 换乘4号线（武汉火车站方向）</div>
+                            </div>
+                        </div>
+                        <div class="route-step">
+                            <div class="route-step-icon">🔄</div>
+                            <div class="route-step-content">
+                                <div class="route-step-title">换乘4号线至钟家村站</div>
+                                <div class="route-step-desc">光谷广场站换乘4号线 → 钟家村站<strong>D口</strong>出 → 步行约800米到归元禅寺（沿翠微路向南）</div>
+                            </div>
+                        </div>
+                        <div class="weather-tip">
+                            <div class="weather-tip-icon">⛅</div>
+                            <div class="weather-tip-content">
+                                <div class="weather-tip-title">☀️ 晴好天气</div>
+                                <div class="weather-tip-desc">今日多云转晴（18-27°C），非常适合户外游览！归元寺上午人少清净，下午游龟山、晴川阁，傍晚看长江夕阳绝佳。建议防晒，携带矿泉水。</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="spot-card">
+                    <div class="spot-time">
+                        <span class="time">10:00</span>
+                        <span class="duration">2小时</span>
+                    </div>
+                    <img class="spot-image" src="images/guiyuansi/1.jpg" alt="归元禅寺" onerror="this.src='https://picsum.photos/140/100?guiyuansi'">
+                    <div class="spot-info">
+                        <div class="spot-name">🛕 归元禅寺</div>
+                        <div class="spot-address">📍 汉阳区翠微路20号</div>
+                        <div class="spot-desc">武汉四大丛林之一，数罗汉祈福，门票10元</div>
+                        <div class="reservation-alert">
+                            <span class="alert-icon">预约</span>
+                            <span>需提前预约 | 预约渠道：武汉归元禅寺公众号</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="transport-tag">🚌 公交 · 约15分钟</div>
+
+                <div class="spot-card">
+                    <div class="spot-time">
+                        <span class="time">12:30</span>
+                        <span class="duration">1小时</span>
+                    </div>
+                    <img class="spot-image" src="images/guqintai/1.jpg" alt="古琴台" onerror="this.src='https://picsum.photos/140/100?guqintai'">
+                    <div class="spot-info">
+                        <div class="spot-name">🎵 古琴台</div>
+                        <div class="spot-address">📍 汉阳区琴台大道</div>
+                        <div class="spot-desc">知音故事发源地，伯牙子期的故事，门票15元</div>
+                    </div>
+                </div>
+
+                <div class="transport-tag">🚶 步行 · 约20分钟</div>
+
+                <div class="mini-spot">
+                    <div class="mini-icon">🎭</div>
+                    <div class="mini-info">
+                        <div class="mini-name">汉阳造文创园</div>
+                        <div class="mini-desc">前身是清末汉阳兵工厂，园区内有IRIS全透明烘焙咖啡工坊、独立设计师品牌店和涂鸦艺术墙，适合拍照闲逛</div>
+                        <span class="mini-tag">📍 龟山北路1号</span>
+                        <span class="mini-tag">免费参观</span>
+                        <span class="mini-tag">文创园区</span>
+                    </div>
+                </div>
+
+                <div class="transport-tag">🚶 步行 · 约5分钟</div>
+
+                <div class="spot-card">
+                    <div class="spot-time">
+                        <span class="time">14:00</span>
+                        <span class="duration">2小时</span>
+                    </div>
+                    <img class="spot-image" src="images/guishan/1.jpg" alt="龟山" onerror="this.src='https://picsum.photos/140/100?guishan'">
+                    <div class="spot-info">
+                        <div class="spot-name">🏔️ 龟山风景区</div>
+                        <div class="spot-address">📍 汉阳区龟山北路5号</div>
+                        <div class="spot-desc">登高俯瞰三镇风光，远眺长江大桥，免费开放</div>
+                    </div>
+                </div>
+
+                <div class="transport-tag">🚶 步行 · 约15分钟</div>
+
+                <div class="mini-spot">
+                    <div class="mini-icon">☕</div>
+                    <div class="mini-info">
+                        <div class="mini-name">持杯咖啡</div>
+                        <div class="mini-desc">开在晴川阁旁楚波亭内的咖啡馆，明代古建筑里喝咖啡，招牌"大持大杯"拿铁，窗外就是长江</div>
+                        <span class="mini-tag">📍 晴川阁楚波亭</span>
+                        <span class="mini-tag">人均 ¥35</span>
+                        <span class="mini-tag">古建筑咖啡</span>
+                    </div>
+                </div>
+
+                <div class="transport-tag">🚶 步行 · 约2分钟</div>
+
+                <div class="spot-card">
+                    <div class="spot-time">
+                        <span class="time">16:30</span>
+                        <span class="duration">1.5小时</span>
+                    </div>
+                    <img class="spot-image" src="images/qingchuange/1.jpg" alt="晴川阁" onerror="this.src='https://picsum.photos/140/100?qingchuange'">
+                    <div class="spot-info">
+                        <div class="spot-name">🏛️ 晴川阁</div>
+                        <div class="spot-address">📍 汉阳区洗马长街86号</div>
+                        <div class="spot-desc">与黄鹤楼隔江相望，"楚天第一名楼"，免费开放</div>
+                    </div>
+                </div>
+
+                <div class="transport-tag">🚕 打车 · 约15分钟</div>
+                <div class="entertainment-spot">
+                    <div class="ent-icon">🚢</div>
+                    <div class="ent-info">
+                        <div class="ent-name">知音号 · 长江漂移式沉浸剧场</div>
+                        <div class="ent-desc">全球首座漂移式多维体验剧场，在百年老轮船上穿越回民国大武汉。演员近距离互动，多条故事线自由探索，独特长江二桥视角</div>
+                        <div class="ent-meta">
+                            <span class="ent-tag">🕐 19:00-20:30</span>
+                            <span class="ent-tag">📍 汉口江滩三阳路</span>
+                            <span class="ent-price">💰 ¥298/人</span>
+                            <span class="ent-tag">🌟 必体验</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="meal-section">
+                    <div class="meal-title">🍽️ 餐饮推荐</div>
+                    <div class="meal-item">
+                        <div class="meal-info">
+                            <div class="meal-name">归元寺素斋</div>
+                            <div class="meal-address">📍 归元禅寺内</div>
+                        </div>
+                        <div class="meal-price">人均 ¥30</div>
+                    </div>
+                    <div class="meal-item">
+                        <div class="meal-info">
+                            <div class="meal-name">亢龙太子酒轩（武昌鱼）</div>
+                            <div class="meal-address">📍 汉阳区</div>
+                        </div>
+                        <div class="meal-price">人均 ¥100</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Day 5 -->
+            <div class="glass-card day-card" data-day="5">
+                <div class="day-header">
+                    <div>
+                        <div class="day-number">Day 5</div>
+                        <div class="day-date">2026年5月5日 周二</div>
+                    </div>
+                    <div class="day-weather">
+                        <span>⛅</span>
+                        <span>多云 19-26°C</span>
+                    </div>
+                </div>
+
+                <div class="route-info">
+                    <div class="route-header" onclick="toggleRouteDetail(this)">
+                        <div>
+                            <div class="route-title">🏠 出发路线 <span class="route-arrow">▶</span></div>
+                            <div class="route-summary">当代国际城 → 武汉大学（约40分钟）建议：🚇 地铁出行</div>
+                        </div>
+                    </div>
+                    <div class="route-detail">
+                        <div class="route-step">
+                            <div class="route-step-icon">🚶</div>
+                            <div class="route-step-content">
+                                <div class="route-step-title">步行至佛祖岭地铁站</div>
+                                <div class="route-step-desc">从当代国际城小区北门出发，沿高新六路向西步行约600米，到达地铁2号线佛祖岭站<strong>B口</strong>进站</div>
+                            </div>
+                        </div>
+                        <div class="route-step">
+                            <div class="route-step-icon">🚇</div>
+                            <div class="route-step-content">
+                                <div class="route-step-title">乘坐地铁2号线</div>
+                                <div class="route-step-desc">佛祖岭站 → 街道口站（约30分钟）<strong>C口</strong>出站</div>
+                            </div>
+                        </div>
+                        <div class="route-step">
+                            <div class="route-step-icon">🚶</div>
+                            <div class="route-step-content">
+                                <div class="route-step-title">步行至武汉大学正门</div>
+                                <div class="route-step-desc">出站后沿珞珈山路向东步行约800米，到达武汉大学正门（牌坊）</div>
+                            </div>
+                        </div>
+                        <div class="weather-tip">
+                            <div class="weather-tip-icon">☀️</div>
+                            <div class="weather-tip-content">
+                                <div class="weather-tip-title">☀️ 晴好天气</div>
+                                <div class="weather-tip-desc">今日晴（17-28°C），最后一天天气绝佳！武大校园绿树成荫，适合漫步拍照。下午光谷购物后返程，带着好心情结束旅程！</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="spot-card">
+                    <div class="spot-time">
+                        <span class="time">10:00</span>
+                        <span class="duration">2小时</span>
+                    </div>
+                    <img class="spot-image" src="images/wuda/1.jpg" alt="武汉大学" onerror="this.src='https://picsum.photos/140/100?wuda'">
+                    <div class="spot-info">
+                        <div class="spot-name">🎓 武汉大学</div>
+                        <div class="spot-address">📍 武昌区珞珈山路16号</div>
+                        <div class="spot-desc">中国最美大学之一，中西合璧宫殿式建筑群，樱园、梅园等四大名园</div>
+                    </div>
+                </div>
+
+                <div class="transport-tag">🚇 地铁 · 约30分钟</div>
+
+                <div class="mini-spot">
+                    <div class="mini-icon">🎨</div>
+                    <div class="mini-info">
+                        <div class="mini-name">大水的店</div>
+                        <div class="mini-desc">昙华林入口处经营13年的老牌咖啡店，店内满是手绘壁画和旧物收藏，老板画风独特，是昙华林的灵魂地标</div>
+                        <span class="mini-tag">📍 昙华林入口</span>
+                        <span class="mini-tag">人均 ¥30</span>
+                        <span class="mini-tag">手绘壁画</span>
+                    </div>
+                </div>
+
+                <div class="transport-tag">🚶 步行 · 约2分钟</div>
+
+                <div class="spot-card">
+                    <div class="spot-time">
+                        <span class="time">12:30</span>
+                        <span class="duration">2小时</span>
+                    </div>
+                    <img class="spot-image" src="images/tanhualin/1.jpg" alt="昙华林" onerror="this.src='https://picsum.photos/140/100?tanhualin'">
+                    <div class="spot-info">
+                        <div class="spot-name">🎨 昙华林</div>
+                        <div class="spot-address">📍 武昌区昙华林</div>
+                        <div class="spot-desc">文艺小清新聚集地，百年老建筑，特色咖啡馆和手工艺品店</div>
+                    </div>
+                </div>
+
+                <div class="transport-tag">🚶 步行 · 约10分钟</div>
+
+                <div class="mini-spot">
+                    <div class="mini-icon">📮</div>
+                    <div class="mini-info">
+                        <div class="mini-name">小昙昙邮局</div>
+                        <div class="mini-desc">中式小楼改造的特色邮局，集齐29枚武汉城市印章，可以写一张明信片寄给未来的自己，旁边还有昙咖可歇脚</div>
+                        <span class="mini-tag">📍 昙华林中段</span>
+                        <span class="mini-tag">盖章免费</span>
+                        <span class="mini-tag">明信片 ¥5</span>
+                    </div>
+                </div>
+
+                <div class="transport-tag">🚶 步行 · 约5分钟</div>
+
+                <div class="spot-card">
+                    <div class="spot-time">
+                        <span class="time">15:00</span>
+                        <span class="duration">1.5小时</span>
+                    </div>
+                    <img class="spot-image" src="images/liangdaojie/1.jpg" alt="粮道街" onerror="this.src='https://picsum.photos/140/100?liangdaojie'">
+                    <div class="spot-info">
+                        <div class="spot-name">🍜 粮道街</div>
+                        <div class="spot-address">📍 武昌区粮道街</div>
+                        <div class="spot-desc">武汉宝藏过早街，必吃赵师傅油饼包烧卖（需排队40分钟+）</div>
+                    </div>
+                </div>
+
+                <div class="transport-tag">🚕 打车 · 约20分钟</div>
+                <div class="entertainment-spot">
+                    <div class="ent-icon">🏎️</div>
+                    <div class="ent-info">
+                        <div class="ent-name">极速卡丁车 · 告别武汉的速度体验</div>
+                        <div class="ent-desc">武汉本土卡丁车馆，赛道难度初级-中级，适合新手和老手。10圈竞速模式，穿戴全套赛车装备，体验风驰电掣的快感</div>
+                        <div class="ent-meta">
+                            <span class="ent-tag">🕐 17:00-18:00</span>
+                            <span class="ent-tag">📍 白沙洲大道38号</span>
+                            <span class="ent-price">💰 ¥100/10圈</span>
+                            <span class="ent-tag">🔥 速度与激情</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="meal-section">
+                    <div class="meal-title">🍽️ 餐饮推荐</div>
+                    <div class="meal-item">
+                        <div class="meal-info">
+                            <div class="meal-name">赵师傅油饼包烧卖</div>
+                            <div class="meal-address">📍 粮道街</div>
+                        </div>
+                        <div class="meal-price">人均 ¥20</div>
+                    </div>
+                    <div class="meal-item">
+                        <div class="meal-info">
+                            <div class="meal-name">昙华林咖啡馆</div>
+                            <div class="meal-address">📍 昙华林</div>
+                        </div>
+                        <div class="meal-price">人均 ¥40</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 双栏布局 -->
+        <div class="grid-2">
+            <!-- 预约提醒 -->
+            <section class="glass-card">
+                <h2 class="section-title">预约提醒清单</h2>
+                <ul class="reservation-list">
+                    <li>
+                        <div>
+                            <div class="reservation-spot">🏛️ 黄鹤楼</div>
+                            <div class="reservation-channel">预约渠道：黄鹤楼公园公众号 | 提前1-7天</div>
+                        </div>
+                        <a href="weixin://biz/menu?bizuin=gh_8f1e9f9f9f9f" class="reservation-link" target="_blank">去预约 →</a>
+                    </li>
+                    <li>
+                        <div>
+                            <div class="reservation-spot">🏛️ 湖北省博物馆</div>
+                            <div class="reservation-channel">预约渠道：湖北省博物馆公众号 | 每日17:18放票</div>
+                        </div>
+                        <a href="https://www.hbww.org/" class="reservation-link" target="_blank">去预约 →</a>
+                    </li>
+                    <li>
+                        <div>
+                            <div class="reservation-spot">🛕 归元禅寺</div>
+                            <div class="reservation-channel">预约渠道：武汉归元禅寺公众号 | 每人限购3张</div>
+                        </div>
+                        <a href="weixin://biz/menu?bizuin=gh_guiyuanchansi" class="reservation-link" target="_blank">去预约 →</a>
+                    </li>
+                    <li>
+                        <div>
+                            <div class="reservation-spot">🛕 古德寺</div>
+                            <div class="reservation-channel">预约渠道：汉口古德寺公众号 | 建议预约</div>
+                        </div>
+                        <a href="weixin://biz/menu?bizuin=gh_gudesi" class="reservation-link" target="_blank">去预约 →</a>
+                    </li>
+                    <li>
+                        <div>
+                            <div class="reservation-spot">🎮 知音号（Day4晚）</div>
+                            <div class="reservation-channel">预约渠道：知音号官方公众号/大麦网 | 建议提前3天购票</div>
+                        </div>
+                        <a href="https://www.zhiyinhao.com/" class="reservation-link" target="_blank">去预约 →</a>
+                    </li>
+                    <li>
+                        <div>
+                            <div class="reservation-spot">🎮 听风推理馆（Day3晚）</div>
+                            <div class="reservation-channel">预约渠道：美团/大众点评 | 建议提前1天预约场次</div>
+                        </div>
+                        <a href="https://www.meituan.com/" class="reservation-link" target="_blank">去预约 →</a>
+                    </li>
+                </ul>
+            </section>
+
+            <!-- 避坑指南 -->
+            <section class="glass-card">
+                <h2 class="section-title">避坑指南</h2>
+                <ul class="tips-list">
+                    <li>黄鹤楼五一期间人流量大，务必提前预约，建议10点前到达</li>
+                    <li>省博每日17:18放票需要拼手速，预约失败可尝试候补功能</li>
+                    <li>户部巷部分临街商铺存在溢价，认准蔡林记、老通城等老字号</li>
+                    <li>景区周边黑车漫天要价，建议地铁+正规网约车出行</li>
+                    <li>5月2-3日可能有大雨，务必带好雨具</li>
+                    <li>从佛祖岭出发坐地铁2号线（终点站），到光谷广场换乘其他线路，早高峰避开8-9点</li>
+                    <li>武汉关-中华路轮渡只需1.5元，性价比极高</li>
+                    <li>东湖范围很大，建议选择精华段骑行10-20公里即可</li>
+                    <li>知音号演出需提前购票，五一期间极易售罄，建议3天前下单</li>
+                    <li>剧本杀建议提前预约场次，现场排队可能等1-2小时</li>
+                    <li>PARTYDAY工作日158元/4小时，节假日+30元，办卡8折更划算</li>
+                    <li>卡丁车建议穿运动鞋和舒适衣物，场馆提供头盔和手套</li>
+                </ul>
+            </section>
+        </div>
+
+        <!-- AI 问答 (已移至浮动面板) -->
+    </div>
+
+    <!-- 浮动聊天面板 -->
+    <div class="chat-panel" id="chatPanel">
+        <div class="chat-panel-header">
+            <h3>🤖 旅行伴游助手</h3>
+            <button class="chat-panel-close" onclick="toggleChatPanel()">✕</button>
+        </div>
+        <div class="chat-messages" id="chatMessages">
+            <div class="chat-message">
+                <div class="chat-avatar">AI</div>
+                <div class="chat-bubble">
+                    您好！我是您的旅行伴游助手，有关于武汉旅行的任何问题都可以问我哦~比如"从当代国际城到黄鹤楼怎么走？"、"武汉有什么必吃美食？"
+                </div>
+            </div>
+        </div>
+        <div class="chat-input-wrap">
+            <input type="text" class="chat-input" id="chatInput" placeholder="问我任何关于这次旅行的问题...">
+            <button class="chat-send" onclick="sendMessage()">发送</button>
+        </div>
+    </div>
+
+    <!-- 浮动按钮组 -->
+    <div class="float-buttons">
+        <button class="float-btn float-btn-top" id="btnBackTop" onclick="scrollToTop()" title="回到顶部">⬆</button>
+        <button class="float-btn float-btn-theme" id="btnTheme" onclick="toggleTheme()" title="切换主题">🌙</button>
+        <button class="float-btn float-btn-home" onclick="goHomeWithTransition(event)" title="返回首页">🏠</button>
+        <button class="float-btn float-btn-chat" id="btnChat" onclick="toggleChatPanel()" title="旅行助手">🤖</button>
+    </div>
+
+    <footer class="footer">
+        <p>数据来源于小红书真实用户游记 | 由 AI 智能规划生成</p>
+        <p style="margin-top: 8px;">🏠 每日出发点：江夏·当代国际城 | 行程特点：不走重复路 | 避开人流高峰 | 睡懒觉友好（10:00后出发）</p>
+    </footer>
+
+    <!-- Lightbox 弹窗 -->
+    <div class="lightbox-overlay" id="lightbox">
+        <button class="lightbox-close" onclick="closeLightbox()">×</button>
+        <button class="lightbox-nav lightbox-prev" onclick="lightboxNav(-1)">‹</button>
+        <button class="lightbox-nav lightbox-next" onclick="lightboxNav(1)">›</button>
+        <div class="lightbox-img-wrap">
+            <img id="lightboxImg" src="" alt="">
+        </div>
+        <div class="lightbox-title" id="lightboxTitle"></div>
+        <div class="lightbox-dots" id="lightboxDots"></div>
+    </div>
+
+    <script>
+        // ======= 登录状态检查 =======
+        (function checkAuth() {
+            const isLoggedIn = sessionStorage.getItem('isLoggedIn');
+            if (isLoggedIn !== 'true') {
+                window.location.href = '../index.html';
+            }
+        })();
+
+        // ======= 图片轮播数据 =======
+        const spotImages = {
+            'huanghelou': { name: '黄鹤楼', count: 10 },
+            'hubuxiang': { name: '户部巷', count: 10 },
+            'changjiangdaqiao': { name: '长江大桥', count: 10 },
+            'hubeimuseum': { name: '湖北省博物馆', count: 10 },
+            'donghu': { name: '东湖', count: 10 },
+            'gudesi': { name: '古德寺', count: 10 },
+            'lihuangpilu': { name: '黎黄陂路', count: 10 },
+            'jianghanlu': { name: '江汉路', count: 10 },
+            'hankoujiangtan': { name: '汉口江滩', count: 10 },
+            'guiyuansi': { name: '归元禅寺', count: 10 },
+            'guqintai': { name: '古琴台', count: 10 },
+            'guishan': { name: '龟山', count: 10 },
+            'qingchuange': { name: '晴川阁', count: 10 },
+            'wuda': { name: '武汉大学', count: 10 },
+            'tanhualin': { name: '昙华林', count: 10 },
+            'liangdaojie': { name: '粮道街', count: 10 },
+        };
+
+        // 初始化所有轮播
+        function initCarousels() {
+            document.querySelectorAll('.spot-image').forEach(img => {
+                const src = img.getAttribute('src');
+                const alt = img.getAttribute('alt');
+                // 从 src 提取 spot key: images/xxx/1.jpg -> xxx
+                const match = src.match(/images\/(\w+)\//);
+                if (!match) return;
+                const key = match[1];
+                const spotData = spotImages[key];
+                if (!spotData) return;
+
+                const carousel = document.createElement('div');
+                carousel.className = 'spot-carousel';
+                carousel.dataset.spot = key;
+                carousel.dataset.current = '0';
+
+                const track = document.createElement('div');
+                track.className = 'carousel-track';
+
+                const count = spotData.count;
+                for (let i = 0; i < count; i++) {
+                    const slide = document.createElement('div');
+                    slide.className = 'carousel-slide';
+                    slide.dataset.index = i;
+                    const slideImg = document.createElement('img');
+                    slideImg.src = `images/${key}/${i + 1}.jpg`;
+                    slideImg.alt = `${alt} ${i + 1}`;
+                    slideImg.loading = 'lazy';
+                    slide.appendChild(slideImg);
+                    slide.addEventListener('click', () => openLightbox(key, i));
+                    track.appendChild(slide);
+                }
+
+                carousel.appendChild(track);
+
+                // Counter
+                const counter = document.createElement('div');
+                counter.className = 'carousel-counter';
+                counter.textContent = `1 / ${count}`;
+                carousel.appendChild(counter);
+
+                // Drag/swipe support
+                let startX = 0, dragging = false;
+                carousel.addEventListener('mousedown', e => { startX = e.clientX; dragging = true; e.preventDefault(); });
+                carousel.addEventListener('mousemove', e => { if (dragging) e.preventDefault(); });
+                carousel.addEventListener('mouseup', e => {
+                    if (!dragging) return;
+                    dragging = false;
+                    const diff = e.clientX - startX;
+                    if (Math.abs(diff) > 30) {
+                        moveCarousel(carousel, diff < 0 ? 1 : -1);
+                    }
+                });
+                carousel.addEventListener('mouseleave', () => { dragging = false; });
+                // Touch
+                carousel.addEventListener('touchstart', e => { startX = e.touches[0].clientX; }, { passive: true });
+                carousel.addEventListener('touchend', e => {
+                    const diff = e.changedTouches[0].clientX - startX;
+                    if (Math.abs(diff) > 30) {
+                        moveCarousel(carousel, diff < 0 ? 1 : -1);
+                    }
+                });
+                // Wheel
+                carousel.addEventListener('wheel', e => {
+                    e.preventDefault();
+                    moveCarousel(carousel, e.deltaY > 0 ? 1 : -1);
+                }, { passive: false });
+
+                // 将轮播插入到 spot-card 末尾（右侧）
+                img.parentNode.appendChild(carousel);
+                updateCarouselSlides(carousel);
+                
+                // Auto rotate
+                setInterval(() => {
+                    if (!document.hidden) moveCarousel(carousel, 1);
+                }, 4000 + Math.random() * 2000);
+            });
+        }
+
+        function moveCarousel(carousel, direction) {
+            const key = carousel.dataset.spot;
+            const count = spotImages[key].count;
+            let current = parseInt(carousel.dataset.current);
+            current = (current + direction + count) % count;
+            carousel.dataset.current = current;
+            updateCarouselSlides(carousel);
+        }
+
+        function updateCarouselSlides(carousel) {
+            const slides = carousel.querySelectorAll('.carousel-slide');
+            const total = slides.length;
+            const current = parseInt(carousel.dataset.current);
+            const counter = carousel.querySelector('.carousel-counter');
+            if (counter) counter.textContent = `${current + 1} / ${total}`;
+
+            slides.forEach((slide, i) => {
+                slide.className = 'carousel-slide';
+                const diff = i - current;
+                const wrappedDiff = ((diff + total + Math.floor(total/2)) % total) - Math.floor(total/2);
+
+                if (wrappedDiff === 0) slide.classList.add('active');
+                else if (wrappedDiff === -1) slide.classList.add('prev');
+                else if (wrappedDiff === 1) slide.classList.add('next');
+                else if (wrappedDiff === -2) slide.classList.add('far-prev');
+                else if (wrappedDiff === 2) slide.classList.add('far-next');
+                else slide.classList.add('hidden');
+            });
+        }
+
+        // ======= Lightbox =======
+        let lbSpot = '', lbIndex = 0;
+
+        function openLightbox(spot, index) {
+            lbSpot = spot;
+            lbIndex = index;
+            const overlay = document.getElementById('lightbox');
+            const img = document.getElementById('lightboxImg');
+            const title = document.getElementById('lightboxTitle');
+            const dots = document.getElementById('lightboxDots');
+
+            img.src = `images/${spot}/${index + 1}.jpg`;
+            title.textContent = `${spotImages[spot].name} (${index + 1}/${spotImages[spot].count})`;
+
+            dots.innerHTML = '';
+            for (let i = 0; i < spotImages[spot].count; i++) {
+                const dot = document.createElement('div');
+                dot.className = 'lightbox-dot' + (i === index ? ' active' : '');
+                dot.onclick = () => { lbIndex = i; updateLightbox(); };
+                dots.appendChild(dot);
+            }
+
+            overlay.classList.add('show');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeLightbox() {
+            document.getElementById('lightbox').classList.remove('show');
+            document.body.style.overflow = '';
+        }
+
+        function lightboxNav(dir) {
+            const count = spotImages[lbSpot].count;
+            lbIndex = (lbIndex + dir + count) % count;
+            updateLightbox();
+        }
+
+        function updateLightbox() {
+            const img = document.getElementById('lightboxImg');
+            const title = document.getElementById('lightboxTitle');
+            img.src = `images/${lbSpot}/${lbIndex + 1}.jpg`;
+            title.textContent = `${spotImages[lbSpot].name} (${lbIndex + 1}/${spotImages[lbSpot].count})`;
+            document.querySelectorAll('.lightbox-dot').forEach((d, i) => {
+                d.className = 'lightbox-dot' + (i === lbIndex ? ' active' : '');
+            });
+        }
+
+        // Keyboard navigation for lightbox
+        document.addEventListener('keydown', e => {
+            const lb = document.getElementById('lightbox');
+            if (!lb.classList.contains('show')) return;
+            if (e.key === 'Escape') closeLightbox();
+            if (e.key === 'ArrowLeft') lightboxNav(-1);
+            if (e.key === 'ArrowRight') lightboxNav(1);
+        });
+
+        // Click overlay to close
+        document.getElementById('lightbox').addEventListener('click', e => {
+            if (e.target === document.getElementById('lightbox')) closeLightbox();
+        });
+
+        // 每日行程颜色配置 - 卡通风格
+        const dayColors = {
+            1: '#FF6B6B',  // 珊瑚红
+            2: '#4ECDC4',  // 薄荷绿
+            3: '#FFE66D',  // 明黄色
+            4: '#95E1D3',  // 青绿色
+            5: '#DDA0DD'   // 梅红色
+        };
+
+        // 出发点 - 佛祖岭当代国际城（修正坐标）
+        const homeSpot = { name: "当代国际城", lng: 114.434, lat: 30.441 };
+        
+        // 按天分组的景点数据（含图片key和交通信息）
+        const daySpots = {
+            1: [
+                { name: "黄鹤楼", lng: 114.3026, lat: 30.5468, imgKey: "huanghelou" },
+                { name: "曹祥泰", lng: 114.3025, lat: 30.5450, mini: true },
+                { name: "户部巷", lng: 114.3015, lat: 30.5438, imgKey: "hubuxiang" },
+                { name: "52O世外Cafe", lng: 114.3040, lat: 30.5455, mini: true },
+                { name: "长江大桥", lng: 114.2850, lat: 30.5500, imgKey: "changjiangdaqiao" },
+                { name: "武中零点航线", lng: 114.2980, lat: 30.5465, entertainment: true }
+            ],
+            2: [
+                { name: "湖北省博物馆", lng: 114.3627, lat: 30.5687, imgKey: "hubeimuseum" },
+                { name: "东湖杉林咖啡", lng: 114.3720, lat: 30.5620, mini: true },
+                { name: "东湖", lng: 114.3800, lat: 30.5550, imgKey: "donghu" },
+                { name: "PARTYDAY运动超乐场", lng: 114.3428, lat: 30.5608, entertainment: true }
+            ],
+            3: [
+                { name: "古德寺", lng: 114.3097, lat: 30.6123, imgKey: "gudesi" },
+                { name: "平和打包厂", lng: 114.2975, lat: 30.5920, mini: true },
+                { name: "黎黄陂路", lng: 114.2954, lat: 30.5894, imgKey: "lihuangpilu" },
+                { name: "咸安坊", lng: 114.2920, lat: 30.5860, mini: true },
+                { name: "江汉路", lng: 114.2889, lat: 30.5823, imgKey: "jianghanlu" },
+                { name: "汉口江滩", lng: 114.2920, lat: 30.5900, imgKey: "hankoujiangtan" },
+                { name: "听风沉浸式推理馆", lng: 114.3980, lat: 30.5090, entertainment: true }
+            ],
+            4: [
+                { name: "归元禅寺", lng: 114.2567, lat: 30.5442, imgKey: "guiyuansi" },
+                { name: "古琴台", lng: 114.2620, lat: 30.5480, imgKey: "guqintai" },
+                { name: "汉阳造文创园", lng: 114.2660, lat: 30.5510, mini: true },
+                { name: "龟山", lng: 114.2678, lat: 30.5523, imgKey: "guishan" },
+                { name: "持杯咖啡", lng: 114.2720, lat: 30.5550, mini: true },
+                { name: "晴川阁", lng: 114.2734, lat: 30.5567, imgKey: "qingchuange" },
+                { name: "知音号", lng: 114.2950, lat: 30.5870, entertainment: true }
+            ],
+            5: [
+                { name: "武汉大学", lng: 114.3647, lat: 30.5368, imgKey: "wuda" },
+                { name: "大水的店", lng: 114.3160, lat: 30.5518, mini: true },
+                { name: "昙华林", lng: 114.3156, lat: 30.5512, imgKey: "tanhualin" },
+                { name: "小昙昙邮局", lng: 114.3165, lat: 30.5505, mini: true },
+                { name: "粮道街", lng: 114.3180, lat: 30.5480, imgKey: "liangdaojie" },
+                { name: "极速卡丁车", lng: 114.3050, lat: 30.5150, entertainment: true }
+            ]
+        };
+
+        // 景点间交通数据：dayTransports[day] = [{icon, label, duration}, ...]
+        // 每天 N 个景点之间有 N-1 段交通
+        const dayTransports = {
+            1: [
+                { icon: '🚶', label: '步行', duration: '10分钟' },
+                { icon: '🚶', label: '步行', duration: '3分钟' },
+                { icon: '🚶', label: '步行', duration: '15分钟' },
+                { icon: '🚶', label: '步行', duration: '5分钟' },
+                { icon: '🚶', label: '步行', duration: '5分钟' }
+            ],
+            2: [
+                { icon: '🚌', label: '公交', duration: '20分钟' },
+                { icon: '🚶', label: '步行', duration: '5分钟' },
+                { icon: '🚕', label: '打车', duration: '30分钟' }
+            ],
+            3: [
+                { icon: '🚇', label: '地铁', duration: '25分钟' },
+                { icon: '🚶', label: '步行', duration: '5分钟' },
+                { icon: '🚶', label: '步行', duration: '10分钟' },
+                { icon: '🚶', label: '步行', duration: '5分钟' },
+                { icon: '🚶', label: '步行', duration: '5分钟' },
+                { icon: '🚕', label: '打车', duration: '25分钟' }
+            ],
+            4: [
+                { icon: '🚌', label: '公交', duration: '15分钟' },
+                { icon: '🚶', label: '步行', duration: '20分钟' },
+                { icon: '🚶', label: '步行', duration: '5分钟' },
+                { icon: '🚶', label: '步行', duration: '15分钟' },
+                { icon: '🚶', label: '步行', duration: '2分钟' },
+                { icon: '🚕', label: '打车', duration: '15分钟' }
+            ],
+            5: [
+                { icon: '🚇', label: '地铁', duration: '30分钟' },
+                { icon: '🚶', label: '步行', duration: '2分钟' },
+                { icon: '🚶', label: '步行', duration: '10分钟' },
+                { icon: '🚶', label: '步行', duration: '5分钟' },
+                { icon: '🚕', label: '打车', duration: '20分钟' }
+            ]
+        };
+        
+        // 存储地图覆盖物，按天分组
+        let mapInstance = null;
+        const dayOverlays = {}; // { 1: [marker, marker, polyline, ...], 2: [...], ... }
+        let activeDay = null;   // null = 全部显示, 1-5 = 只显示某天
+
+        function initMap() {
+            mapInstance = new AMap.Map('map', {
+                zoom: 11,
+                center: [114.35, 30.50],
+                mapStyle: 'amap://styles/darkblue'
+            });
+
+            // 添加出发点标记（始终显示）
+            const homeMarker = new AMap.Marker({
+                position: [homeSpot.lng, homeSpot.lat],
+                title: homeSpot.name,
+                content: `<div style="
+                    background: linear-gradient(135deg, #4CAF50, #81C784);
+                    color: white;
+                    padding: 8px 14px;
+                    border-radius: 20px;
+                    font-size: 13px;
+                    font-weight: bold;
+                    white-space: nowrap;
+                    box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+                    border: 2px solid white;
+                ">🏠 ${homeSpot.name}</div>`
+            });
+            mapInstance.add(homeMarker);
+
+            // 为每天创建覆盖物并分组存储
+            Object.keys(daySpots).forEach(day => {
+                const spots = daySpots[day];
+                const color = dayColors[day];
+                const transports = dayTransports[day] || [];
+                dayOverlays[day] = [];
+
+                // 景点标记（带 hover 图片提示）
+                spots.forEach((spot, idx) => {
+                    const imgKey = spot.imgKey;
+                    const imgSrc = imgKey ? `images/${imgKey}/1.jpg` : '';
+                    const isMini = spot.mini;
+                    const isEnt = spot.entertainment;
+                    let markerContent;
+                    if (isEnt) {
+                        markerContent = `<div class="map-spot-marker" style="position:relative;">
+                                <div style="
+                                    background: linear-gradient(135deg, #9b59b6, #3498db);
+                                    color: white;
+                                    padding: 4px 10px;
+                                    border-radius: 12px;
+                                    font-size: 10px;
+                                    font-weight: bold;
+                                    white-space: nowrap;
+                                    box-shadow: 0 3px 10px rgba(155,89,182,0.4);
+                                    border: 1.5px solid white;
+                                ">🎮 ${spot.name}</div>
+                            </div>`;
+                    } else if (isMini) {
+                        markerContent = `<div class="map-spot-marker" style="position:relative;">
+                                <div style="
+                                    background: rgba(212,175,55,0.85);
+                                    color: #1a1a2e;
+                                    padding: 3px 8px;
+                                    border-radius: 10px;
+                                    font-size: 9px;
+                                    font-weight: bold;
+                                    white-space: nowrap;
+                                    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+                                    border: 1.5px solid white;
+                                ">⭐ ${spot.name}</div>
+                            </div>`;
+                    } else {
+                        markerContent = `<div class="map-spot-marker" style="position:relative;">
+                            <div class="map-spot-tooltip">
+                                ${imgSrc ? `<img src="${imgSrc}" alt="${spot.name}">` : ''}
+                                <div class="tooltip-name">${spot.name}</div>
+                            </div>
+                            <div style="
+                                background: linear-gradient(135deg, ${color}, ${color}dd);
+                                color: ${day == 3 ? '#333' : 'white'};
+                                padding: 6px 12px;
+                                border-radius: 16px;
+                                font-size: 11px;
+                                font-weight: bold;
+                                white-space: nowrap;
+                                box-shadow: 0 3px 10px ${color}66;
+                                border: 2px solid white;
+                            ">D${day}-${idx + 1} ${spot.name}</div>
+                        </div>`;
+                    }
+                    const marker = new AMap.Marker({
+                        position: [spot.lng, spot.lat],
+                        anchor: 'bottom-center',
+                        content: markerContent
+                    });
+                    mapInstance.add(marker);
+                    dayOverlays[day].push(marker);
+                });
+
+                // 出发点到第一个景点的虚线
+                const startLine = new AMap.Polyline({
+                    path: [[homeSpot.lng, homeSpot.lat], [spots[0].lng, spots[0].lat]],
+                    strokeColor: color,
+                    strokeWeight: 3,
+                    strokeOpacity: 0.6,
+                    strokeStyle: 'dashed',
+                    lineJoin: 'round',
+                    lineCap: 'round'
+                });
+                mapInstance.add(startLine);
+                dayOverlays[day].push(startLine);
+
+                // 当日景点之间的实线 + 交通图标
+                if (spots.length > 1) {
+                    const dayLine = new AMap.Polyline({
+                        path: spots.map(s => [s.lng, s.lat]),
+                        strokeColor: color,
+                        strokeWeight: 5,
+                        strokeOpacity: 0.9,
+                        strokeStyle: 'solid',
+                        lineJoin: 'round',
+                        lineCap: 'round',
+                        showDir: true
+                    });
+                    mapInstance.add(dayLine);
+                    dayOverlays[day].push(dayLine);
+
+                    // 在每段路线中点放置交通图标
+                    for (let i = 0; i < spots.length - 1; i++) {
+                        const t = transports[i];
+                        if (!t) continue;
+                        const midLng = (spots[i].lng + spots[i + 1].lng) / 2;
+                        const midLat = (spots[i].lat + spots[i + 1].lat) / 2;
+                        const transportMarker = new AMap.Marker({
+                            position: [midLng, midLat],
+                            anchor: 'center',
+                            content: `<div class="map-transport-marker">
+                                <span class="map-transport-icon">${t.icon}</span>
+                                <span class="map-transport-duration">${t.duration}</span>
+                            </div>`
+                        });
+                        mapInstance.add(transportMarker);
+                        dayOverlays[day].push(transportMarker);
+                    }
+                }
+            });
+
+            mapInstance.setFitView(null, false, [50, 50, 50, 50]);
+        }
+
+        // 图例筛选：点击某天只显示该天，再次点击恢复全部
+        function filterMapDay(day) {
+            if (activeDay === day) {
+                // 再次点击同一天 → 恢复全部
+                activeDay = null;
+                Object.keys(dayOverlays).forEach(d => {
+                    dayOverlays[d].forEach(o => o.show());
+                });
+                // 图例全部激活
+                document.querySelectorAll('.legend-item[data-day]').forEach(el => {
+                    if (el.dataset.day !== 'home') el.classList.add('active');
+                });
+                mapInstance.setFitView(null, false, [50, 50, 50, 50]);
+            } else {
+                // 点击新的一天 → 只显示该天
+                activeDay = day;
+                Object.keys(dayOverlays).forEach(d => {
+                    dayOverlays[d].forEach(o => {
+                        if (parseInt(d) === day) o.show();
+                        else o.hide();
+                    });
+                });
+                // 图例只激活当前天
+                document.querySelectorAll('.legend-item[data-day]').forEach(el => {
+                    if (el.dataset.day === 'home') return;
+                    if (parseInt(el.dataset.day) === day) el.classList.add('active');
+                    else el.classList.remove('active');
+                });
+                // 聚焦当天景点
+                mapInstance.setFitView(dayOverlays[day], false, [60, 60, 60, 60]);
+            }
+        }
+
+        // 出发路线展开/收起功能
+        function toggleRouteDetail(element) {
+            const detail = element.nextElementSibling;
+            const arrow = element.querySelector('.route-arrow');
+            if (detail.style.display === 'none' || detail.style.display === '') {
+                detail.style.display = 'block';
+                arrow.textContent = '▼';
+            } else {
+                detail.style.display = 'none';
+                arrow.textContent = '▶';
+            }
+        }
+
+        // DeepSeek API 配置
+        const DEEPSEEK_API_KEY = 'sk-7d1850dab54445e3ac304d0ebddc961d';
+        const DEEPSEEK_API_URL = 'https://api.deepseek.com/chat/completions';
+        
+        // 行程上下文信息，供 AI 参考
+        const tripContext = `
+你是武汉旅行伴游助手，负责回答用户关于本次武汉旅行的问题。
+
+【行程信息】
+- 出发点：武汉江夏·当代国际城
+- 旅行日期：2026年5月1日-5日（共5天）
+- 预算：门票¥223 + 餐饮¥1150 + 交通¥400 + 娱乐¥684 = 总计¥2457
+
+【每日行程安排】
+Day 1 (5月1日): 当代国际城→黄鹤楼→曹祥泰（百年糕点）→户部巷→52O世外Cafe（天台咖啡）→武昌江滩&长江大桥→🎮武中零点航线（长江夜游轮渡¥10）
+Day 2 (5月2日): 当代国际城→湖北省博物馆→东湖杉林咖啡→东湖听涛景区&绿道骑行→🎮PARTYDAY运动超乐场（50+运动¥158）
+Day 3 (5月3日): 当代国际城→古德寺→平和打包厂（文创园）→黎黄陂路→咸安坊（百年里弄）→江汉路步行街→汉口江滩→🎮听风沉浸式推理馆（剧本杀¥118）
+Day 4 (5月4日): 当代国际城→归元禅寺→古琴台→汉阳造文创园→龟山风景区→持杯咖啡（古建筑咖啡）→晴川阁→🎮知音号（长江漂移剧场¥298）
+Day 5 (5月5日): 当代国际城→武汉大学→大水的店（昙华林咖啡）→昙华林→小昙昙邮局（盖章打卡）→粮道街→🎮极速卡丁车（竞速体验¥100）
+
+【需预约景点】
+- 黄鹤楼：黄鹤楼公园公众号，提前1-7天
+- 湖北省博物馆：湖北省博物馆公众号，每日17:18放票
+- 归元禅寺：武汉归元禅寺公众号
+- 古德寺：汉口古德寺公众号
+
+【交通提示】
+从当代国际城出发，步行至地铁2号线佛祖岭站（终点站）B口进站，到光谷广场站可换乘其他线路。换乘4号线到武昌/汉阳景点，换乘2号线继续到汉口景点。
+
+【美食推荐】
+热干面（蔡林记）、三鲜豆皮（老通城）、四季美汤包、糊汤粉、面窝、武昌鱼、排骨藕汤、油饼包烧卖（赵师傅）、小龙虾
+
+【天气预报】
+5月1日：多云转阴 15-29°C
+5月2-3日：阴有大雨 17-24°C（记得带雨具）
+5月4-5日：多云 18-26°C
+
+请根据以上信息，用简洁友好的语气回答用户问题。如果问题超出行程范围，可以根据你对武汉的了解给出建议。
+`;
+
+        // 消息历史记录
+        let messageHistory = [
+            { role: 'system', content: tripContext }
+        ];
+
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const messages = document.getElementById('chatMessages');
+            const sendBtn = document.querySelector('.chat-send');
+            const text = input.value.trim();
+            
+            if (!text) return;
+
+            // 显示用户消息
+            messages.innerHTML += `
+                <div class="chat-message user">
+                    <div class="chat-avatar">我</div>
+                    <div class="chat-bubble">${escapeHtml(text)}</div>
+                </div>
+            `;
+            input.value = '';
+            messages.scrollTop = messages.scrollHeight;
+
+            // 添加用户消息到历史
+            messageHistory.push({ role: 'user', content: text });
+
+            // 显示加载状态
+            const loadingId = 'loading-' + Date.now();
+            messages.innerHTML += `
+                <div class="chat-message" id="${loadingId}">
+                    <div class="chat-avatar">AI</div>
+                    <div class="chat-bubble">
+                        <span class="loading-dots">思考中<span>.</span><span>.</span><span>.</span></span>
+                    </div>
+                </div>
+            `;
+            messages.scrollTop = messages.scrollHeight;
+            sendBtn.disabled = true;
+            sendBtn.textContent = '发送中...';
+
+            try {
+                const response = await fetch(DEEPSEEK_API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${DEEPSEEK_API_KEY}`
+                    },
+                    body: JSON.stringify({
+                        model: 'deepseek-chat',
+                        messages: messageHistory,
+                        temperature: 0.7,
+                        max_tokens: 1000
+                    })
+                });
+
+                const loadingEl = document.getElementById(loadingId);
+
+                if (!response.ok) {
+                    throw new Error(`API 请求失败: ${response.status}`);
+                }
+
+                const data = await response.json();
+                const reply = data.choices[0].message.content;
+
+                // 添加 AI 回复到历史
+                messageHistory.push({ role: 'assistant', content: reply });
+
+                // 替换加载消息为实际回复
+                if (loadingEl) {
+                    loadingEl.querySelector('.chat-bubble').innerHTML = formatReply(reply);
+                }
+
+            } catch (error) {
+                console.error('DeepSeek API Error:', error);
+                const loadingEl = document.getElementById(loadingId);
+                
+                // 如果 API 调用失败，使用本地回复
+                let fallbackReply = getFallbackReply(text);
+                
+                if (loadingEl) {
+                    loadingEl.querySelector('.chat-bubble').innerHTML = 
+                        `${formatReply(fallbackReply)}<br><small style="color: rgba(255,255,255,0.4);">(离线模式)</small>`;
+                }
+            } finally {
+                sendBtn.disabled = false;
+                sendBtn.textContent = '发送';
+                messages.scrollTop = messages.scrollHeight;
+            }
+        }
+
+        // HTML 转义，防止 XSS
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 格式化回复（支持markdown语法渲染）
+        function formatReply(text) {
+            return text
+                .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                // 标题处理
+                .replace(/^### (.+)$/gm, '<strong style="font-size:0.95rem;color:#d4af37;">$1</strong>')
+                .replace(/^## (.+)$/gm, '<strong style="font-size:1rem;color:#d4af37;">$1</strong>')
+                .replace(/^# (.+)$/gm, '<strong style="font-size:1.05rem;color:#d4af37;">$1</strong>')
+                // 粗体和斜体
+                .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.+?)\*/g, '<em>$1</em>')
+                // 行内代码
+                .replace(/`(.+?)`/g, '<code style="background:rgba(255,255,255,0.08);padding:1px 5px;border-radius:4px;font-size:0.85em;">$1</code>')
+                // 有序列表
+                .replace(/^\d+\.\s+(.+)$/gm, '<div style="padding-left:1.2em;text-indent:-1.2em;margin:2px 0;">$&</div>')
+                // 无序列表
+                .replace(/^[-*]\s+(.+)$/gm, '<div style="padding-left:1em;margin:2px 0;">• $1</div>')
+                // 换行处理
+                .replace(/\n{2,}/g, '<br><br>')
+                .replace(/\n/g, '<br>');
+        }
+
+        // 本地备用回复（API 不可用时）
+        function getFallbackReply(text) {
+            if (text.includes("美食") || text.includes("吃")) {
+                return "武汉必吃美食推荐：\n1. 热干面（蔡林记）\n2. 三鲜豆皮（老通城）\n3. 糊汤粉\n4. 面窝\n5. 武昌鱼\n6. 排骨藕汤\n7. 油饼包烧卖（赵师傅）";
+            } else if (text.includes("预约") || text.includes("黄鹤楼")) {
+                return "黄鹤楼预约方式：微信搜索「黄鹤楼公园」公众号，可提前1-7天预约。五一期间建议提前预约，10点前到达避开高峰。";
+            } else if (text.includes("交通") || text.includes("怎么去") || text.includes("当代国际城")) {
+                return "从当代国际城出发：步行至地铁2号线佛祖岭站（终点站）B口进站，到光谷广场站可换乘4号线到武昌/汉阳景点，继续坐2号线到汉口景点。到黄鹤楼约55分钟，到省博约50分钟。";
+            } else if (text.includes("天气") || text.includes("穿")) {
+                return "5月武汉气温18-27°C，建议穿薄T恤+薄外套。5月2-3日可能有大雨，记得带雨具！";
+            } else if (text.includes("省博") || text.includes("博物馆")) {
+                return "湖北省博物馆预约：每日17:18放票，需要拼手速！预约失败可尝试候补功能。必看三宝：越王勾践剑、曾侯乙编钟、郧县人头骨化石。";
+            }
+            return "抱歉，当前 AI 服务暂时不可用。您可以问我关于行程、美食、交通、预约等问题，我会尽力回答！";
+        }
+
+        document.getElementById('chatInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // 浮动聊天面板 开关
+        function toggleChatPanel() {
+            const panel = document.getElementById('chatPanel');
+            const btn = document.getElementById('btnChat');
+            panel.classList.toggle('open');
+            // 打开时聚焦输入框
+            if (panel.classList.contains('open')) {
+                setTimeout(() => document.getElementById('chatInput').focus(), 350);
+            }
+        }
+
+        // 置顶按钮：滚动超过 400px 时显示
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        window.addEventListener('scroll', () => {
+            const btn = document.getElementById('btnBackTop');
+            if (window.scrollY > 400) {
+                btn.classList.add('visible');
+            } else {
+                btn.classList.remove('visible');
+            }
+        });
+
+        // 主题切换
+        function toggleTheme() {
+            const body = document.body;
+            const btn = document.getElementById('btnTheme');
+            body.classList.toggle('light-theme');
+            const isLight = body.classList.contains('light-theme');
+            btn.textContent = isLight ? '🌞' : '🌙';
+            localStorage.setItem('theme', isLight ? 'light' : 'dark');
+        }
+
+        // 初始化主题
+        (function initTheme() {
+            const saved = localStorage.getItem('theme');
+            if (saved === 'light') {
+                document.body.classList.add('light-theme');
+                document.getElementById('btnTheme').textContent = '🌞';
+            }
+        })();
+
+        // 点击面板外部关闭
+        document.addEventListener('click', (e) => {
+            const panel = document.getElementById('chatPanel');
+            const chatBtn = document.getElementById('btnChat');
+            if (panel.classList.contains('open') &&
+                !panel.contains(e.target) &&
+                !chatBtn.contains(e.target)) {
+                panel.classList.remove('open');
+            }
+        });
+
+        // 返回首页缩小特效
+        function goHomeWithTransition(e) {
+            e.preventDefault();
+            const x = e.clientX || window.innerWidth - 48;
+            const y = e.clientY || window.innerHeight - 80;
+            const maxDist = Math.max(
+                Math.hypot(x, y),
+                Math.hypot(window.innerWidth - x, y),
+                Math.hypot(x, window.innerHeight - y),
+                Math.hypot(window.innerWidth - x, window.innerHeight - y)
+            );
+            const diameter = maxDist * 2;
+
+            const overlay = document.createElement('div');
+            overlay.className = 'page-shrink-overlay';
+
+            // 缩小遮罩圆
+            const mask = document.createElement('div');
+            mask.className = 'shrink-mask';
+            mask.style.left = (x - maxDist) + 'px';
+            mask.style.top = (y - maxDist) + 'px';
+            mask.style.width = diameter + 'px';
+            mask.style.height = diameter + 'px';
+            overlay.appendChild(mask);
+
+            // 收缩波纹
+            for (let i = 0; i < 2; i++) {
+                const ring = document.createElement('div');
+                ring.className = 'shrink-flash';
+                ring.style.left = x + 'px';
+                ring.style.top = y + 'px';
+                ring.style.width = '80px';
+                ring.style.height = '80px';
+                ring.style.animationDelay = (i * 0.15) + 's';
+                overlay.appendChild(ring);
+            }
+
+            // 首页图标
+            const icon = document.createElement('div');
+            icon.className = 'home-icon-anim';
+            icon.textContent = '🏠';
+            icon.style.left = x + 'px';
+            icon.style.top = y + 'px';
+            overlay.appendChild(icon);
+
+            document.body.appendChild(overlay);
+
+            setTimeout(() => { window.location.href = '../index.html'; }, 900);
+        }
+
+        window.onload = function() {
+            initMap();
+            initCarousels();
+        };
+    </script>
+</body>
+</html>
